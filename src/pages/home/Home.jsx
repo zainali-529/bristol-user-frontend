@@ -1,5 +1,6 @@
 import TopNav from '../../components/TopNav'
-import { HeroSection, WhyTrustUs, About, Services, TrustedPartners, HowWeWork, IndustriesWeServe, AverageSavingsByIndustry, Testimonials, ContactUs, TeamMembers, EnergyPriceTracker, SavingsStatistics } from './sections'
+import Footer from '../../components/Footer'
+import { HeroSection, WhyTrustUs, About, Services, TrustedPartners, HowWeWork, IndustriesWeServe, AverageSavingsByIndustry, Testimonials, ContactUs, QuoteForm, TeamMembers, EnergyPriceTracker, SavingsStatistics, BillCalculator, Faqs, MouseRevealSection } from './sections'
 
 function HomePage() {
   return (
@@ -14,10 +15,15 @@ function HomePage() {
       <HowWeWork />
       <IndustriesWeServe />
       <AverageSavingsByIndustry />
+      <BillCalculator />
       <EnergyPriceTracker />
       <Testimonials />
+      <MouseRevealSection />
       <TeamMembers />
+      <Faqs />
       <ContactUs />
+      <QuoteForm />
+      <Footer />
     </div>
   )
 }

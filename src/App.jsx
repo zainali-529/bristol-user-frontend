@@ -6,7 +6,7 @@ function App() {
   return (
     <>
       <RouterProvider router={router} />
-      <MouseFollowerGSAP />
+      {/* <MouseFollowerGSAP /> */}
     </>
   )
 }

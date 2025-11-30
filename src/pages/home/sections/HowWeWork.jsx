@@ -1,40 +1,27 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, ChevronUp, ArrowUpRight, Phone, FileText, Code, Rocket } from 'lucide-react'
+import { ChevronDown, ChevronUp, ArrowUpRight, Phone } from 'lucide-react'
+import { useHowWeWorkRedux } from '@/hooks/useHowWeWorkRedux'
+import { getLucideIcon } from '@/utils/lucideIcons'
 
 function HowWeWork() {
+  const { steps: stepsData, loading } = useHowWeWorkRedux()
   const [openIndex, setOpenIndex] = useState(1) // Start with "Strategy Session" open
 
-  const steps = [
-    {
-      id: 0,
-      title: "Book a Discovery Call",
-      description: "Schedule a free consultation to discuss your business needs and energy requirements. We'll understand your current situation, challenges, and goals to provide the best solutions tailored to your business.",
-      icon: Phone,
-      image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80", // Meeting/discussion image
-    },
-    {
-      id: 1,
-      title: "Strategy Session",
-      description: "We will review the insights from the discovery call and develop a tailored strategy and proposal. We'll create a detailed plan with actionable steps, timelines, and deliverables to meet your project requirements.",
-      icon: FileText,
-      image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80", // Strategy/planning image
-    },
-    {
-      id: 2,
-      title: "Design and Development",
-      description: "Our team brings your strategy to life with custom solutions. We handle all aspects of implementation, ensuring seamless integration with your existing systems and processes.",
-      icon: Code,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80", // Development/design image
-    },
-    {
-      id: 3,
-      title: "Launch and Support",
-      description: "We ensure a smooth launch and provide ongoing support to help you maximize the benefits. Our team remains available to assist with any questions, optimizations, or future enhancements you may need.",
-      icon: Rocket,
-      image: "https://images.unsplash.com/photo-1553484771-371a605b060b?w=800&q=80", // Launch/success image
-    },
-  ]
+  // Map steps data to include icon components using dynamic icon utility
+  const steps = useMemo(() => {
+    if (!stepsData || stepsData.length === 0) return []
+    
+    return stepsData.map((step) => {
+      // Get icon component dynamically from iconName using the utility
+      const IconComponent = getLucideIcon(step.iconName) || Phone; // Default to Phone if icon not found
+      
+      return {
+        ...step,
+        icon: IconComponent,
+      }
+    })
+  }, [stepsData])
 
   const toggleAccordion = (index) => {
     // Always keep at least one accordion open
@@ -49,9 +36,33 @@ function HowWeWork() {
   // Ensure openIndex is always valid (at least one accordion open)
   const validOpenIndex = openIndex !== null && openIndex >= 0 && openIndex < steps.length 
     ? openIndex 
-    : 1 // Default to Strategy Session
+    : (steps.length > 1 ? 1 : 0) // Default to second step or first if only one step
   
-  const activeStep = steps.find(step => step.id === validOpenIndex) || steps[1] // Default to Strategy Session
+  const activeStep = steps.find(step => step.id === validOpenIndex) || steps[0] || null
+
+  // Show loading state or empty state
+  if (loading && steps.length === 0) {
+    return (
+      <section 
+        className="py-16 md:py-24 px-4 relative overflow-hidden"
+        style={{ 
+          backgroundColor: 'var(--background)',
+          background: 'radial-gradient(ellipse at right, var(--primary-10) 0%, var(--background) 50%)'
+        }}
+      >
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center">
+            <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // Don't render if no steps available
+  if (!steps || steps.length === 0) {
+    return null
+  }
 
   return (
     <section 
@@ -102,31 +113,33 @@ function HowWeWork() {
           <div className="space-y-4">
               {steps.map((step, index) => {
                 const isOpen = validOpenIndex === step.id
-              const IconComponent = step.icon
-              
-              return (
+                const IconComponent = step.icon
+                
+                return (
                   <div
                     key={step.id}
-                    className="rounded-2xl transition-all duration-500 cursor-pointer overflow-hidden backdrop-blur-sm"
+                    className="rounded-2xl transition-all duration-700 ease-out cursor-pointer overflow-hidden"
                     style={{
                       backgroundColor: isOpen 
-                        ? 'rgba(255, 255, 255, 0.05)' 
-                        : 'rgba(0, 0, 0, 0.2)',
-                      border: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)'}`,
-                      transform: isOpen ? 'translateX(8px) scale(1.01)' : 'translateX(0) scale(1)',
+                        ? 'var(--card)' 
+                        : 'var(--primary-5)',
+                      border: `2px solid ${isOpen ? 'var(--primary)' : 'var(--border)'}`,
+                      transform: isOpen ? 'translateX(8px) scale(1.02)' : 'translateX(0) scale(1)',
                       boxShadow: isOpen 
-                        ? '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)' 
-                        : '0 4px 15px rgba(0, 0, 0, 0.2)',
+                        ? '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px var(--primary-20)' 
+                        : '0 4px 12px rgba(0, 0, 0, 0.08)',
                     }}
                     onClick={() => toggleAccordion(step.id)}
                     onMouseEnter={(e) => {
                       if (!isOpen) {
-                        e.currentTarget.style.transform = 'translateX(4px) scale(1.005)'
+                        e.currentTarget.style.transform = 'translateX(4px) scale(1.01)'
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isOpen) {
                         e.currentTarget.style.transform = 'translateX(0) scale(1)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)'
                       }
                     }}
                   >
@@ -134,11 +147,12 @@ function HowWeWork() {
                   <div className="p-6 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300"
+                        className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ease-out"
                         style={{
                           backgroundColor: isOpen 
                             ? 'var(--primary)' 
-                            : 'var(--primary-20)',
+                            : 'var(--primary-10)',
+                          transform: isOpen ? 'scale(1.1)' : 'scale(1)',
                         }}
                       >
                         <IconComponent 
@@ -149,34 +163,39 @@ function HowWeWork() {
                         />
                       </div>
                       <h3
-                        className="text-xl md:text-2xl font-bold transition-colors duration-300"
+                        className="text-xl md:text-2xl font-bold transition-all duration-500 ease-out"
                         style={{
                           color: isOpen 
                             ? 'var(--text-primary)' 
                             : 'var(--text-secondary)',
+                          transform: isOpen ? 'translateX(4px)' : 'translateX(0)',
                         }}
                       >
                         {step.title}
                       </h3>
                     </div>
                     <div 
-                      className="transition-transform duration-300" 
-                      style={{ color: 'var(--primary)' }}
+                      className="transition-all duration-500 ease-out" 
+                      style={{ 
+                        color: isOpen ? 'var(--primary)' : 'var(--text-secondary)',
+                        transform: isOpen ? 'rotate(0deg)' : 'rotate(0deg)',
+                      }}
                     >
                       {isOpen ? (
-                        <ChevronUp size={24} className="text-primary" />
+                        <ChevronUp size={24} />
                       ) : (
-                        <ChevronDown size={24} className="opacity-50" />
+                        <ChevronDown size={24} className="opacity-60" />
                       )}
                     </div>
                   </div>
 
                   {/* Accordion Content */}
                   <div
-                    className="overflow-hidden transition-all duration-500 ease-in-out"
+                    className="overflow-hidden transition-all duration-700 ease-out"
                     style={{
                       maxHeight: isOpen ? '500px' : '0',
                       opacity: isOpen ? 1 : 0,
+                      transform: isOpen ? 'translateY(0)' : 'translateY(-10px)',
                     }}
                   >
                     <div className="px-6 pb-6">
@@ -187,41 +206,33 @@ function HowWeWork() {
                         {step.description}
                       </p>
                     </div>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
           </div>
 
           {/* Right: Animated Image */}
           <div className="relative">
             <div 
-              className="rounded-3xl overflow-hidden relative backdrop-blur-xl"
+              className="rounded-3xl overflow-hidden relative"
               style={{
                 minHeight: '600px',
-                backgroundColor: 'rgba(0, 0, 0, 0.15)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), inset 0 0 100px rgba(255, 255, 255, 0.05)',
+                backgroundColor: 'var(--card)',
+                border: '2px solid var(--border)',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
               }}
             >
-              {/* Background Gradient Overlay with Glass Effect */}
+              {/* Background Gradient Overlay */}
               <div 
-                className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
+                className="absolute inset-0 z-0 transition-all duration-1000 ease-out"
                 style={{
                   background: `linear-gradient(135deg, 
-                    var(--primary-20) 0%, 
-                    var(--primary-10) 30%,
-                    rgba(0, 0, 0, 0.2) 70%,
-                    rgba(0, 0, 0, 0.4) 100%
+                    var(--primary-10) 0%, 
+                    var(--primary-5) 50%,
+                    transparent 100%
                   )`,
-                }}
-              />
-              
-              {/* Additional Glass Layers */}
-              <div 
-                className="absolute inset-0 z-0 opacity-50"
-                style={{
-                  background: 'radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+                  opacity: 0.6,
                 }}
               />
 
@@ -230,15 +241,13 @@ function HowWeWork() {
                 {steps.map((step, index) => (
                   <div
                     key={step.id}
-                    className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-                      validOpenIndex === step.id 
-                        ? 'opacity-100 scale-100 z-20' 
-                        : 'opacity-0 scale-105 z-10'
-                    }`}
+                    className="absolute inset-0 transition-all duration-1000 ease-out"
                     style={{
+                      opacity: validOpenIndex === step.id ? 1 : 0,
                       transform: validOpenIndex === step.id 
                         ? 'scale(1) translateZ(0)' 
-                        : 'scale(1.05) translateZ(0)',
+                        : 'scale(1.03) translateZ(0)',
+                      zIndex: validOpenIndex === step.id ? 20 : 10,
                     }}
                   >
                     <img
@@ -247,24 +256,25 @@ function HowWeWork() {
                       className="w-full h-full object-cover"
                       style={{
                         filter: validOpenIndex === step.id
-                          ? 'brightness(0.6) contrast(1.2) saturate(1.1)'
-                          : 'brightness(0.5) contrast(1.0)',
-                        transition: 'filter 0.7s ease-in-out',
+                          ? 'brightness(0.9) contrast(1.1) saturate(1.05)'
+                          : 'brightness(0.7) contrast(1.0)',
+                        transition: 'filter 1s ease-out',
                       }}
                       onError={(e) => {
                         // Fallback to a placeholder if image fails
                         e.target.src = `https://via.placeholder.com/800x600/${step.id === 0 ? 'AE613A' : step.id === 1 ? '8B4513' : step.id === 2 ? '6B4423' : '4A2C1A'}/ffffff?text=${encodeURIComponent(step.title)}`
                       }}
                     />
-                    {/* Overlay for better glass effect */}
+                    {/* Overlay for better contrast */}
                     <div 
-                      className="absolute inset-0"
+                      className="absolute inset-0 transition-opacity duration-1000 ease-out"
                       style={{
                         background: `linear-gradient(to bottom, 
                           transparent 0%,
-                          rgba(0, 0, 0, 0.2) 50%,
-                          rgba(0, 0, 0, 0.4) 100%
+                          rgba(0, 0, 0, 0.1) 50%,
+                          rgba(0, 0, 0, 0.3) 100%
                         )`,
+                        opacity: validOpenIndex === step.id ? 1 : 0.5,
                       }}
                     />
                   </div>
@@ -273,19 +283,21 @@ function HowWeWork() {
                 {/* Overlay with Icon */}
                 <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
                   <div 
-                    className="transition-all duration-700 ease-in-out"
+                    className="transition-all duration-1000 ease-out"
                     style={{
-                      opacity: 0.8,
+                      opacity: 0.9,
                       transform: validOpenIndex !== null 
                         ? 'scale(1) rotate(0deg)' 
-                        : 'scale(0.8) rotate(-5deg)',
+                        : 'scale(0.9) rotate(-3deg)',
                     }}
                   >
                     {validOpenIndex !== null && (
-                      <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center rounded-3xl backdrop-blur-md"
+                      <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center rounded-3xl"
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          border: '2px solid rgba(255, 255, 255, 0.2)',
+                          backgroundColor: 'var(--primary-20)',
+                          border: '2px solid var(--primary)',
+                          backdropFilter: 'blur(10px)',
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                         }}
                       >
                         {(() => {
@@ -294,8 +306,8 @@ function HowWeWork() {
                             <ActiveIcon 
                               size={64}
                               style={{ 
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))',
+                                color: 'var(--primary)',
+                                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))',
                               }}
                             />
                           )

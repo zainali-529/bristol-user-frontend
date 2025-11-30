@@ -5,6 +5,5 @@ export { default as AboutPage } from './about'
 export { default as QuotePage } from './quote'
 export { default as NewsPage } from './news'
 export { default as ColorSchemeDemo } from './ColorSchemeDemo'
-export { default as QuoteCalculatorPage } from './quote-calculator'
 export { default as EnergyPriceTrackerPage } from './energy-price-tracker'
 

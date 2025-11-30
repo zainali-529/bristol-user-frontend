@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Carousel,
   CarouselContent,
@@ -6,28 +6,24 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
+import { useSuppliersRedux } from '@/hooks/useSuppliersRedux'
 
 function TrustedPartners() {
   const [api, setApi] = useState(null)
+  const { suppliers, loading } = useSuppliersRedux()
 
-  // Supplier logos - can be from API later
-  const suppliers = [
-    '/images/supplier-2-BykWEX1I 1.svg',
-    '/images/supplier-3-Btnowtmc 1.svg',
-    '/images/supplier-4-C2r7Wi7a 1.svg',
-    '/images/supplier-5-ClfzecGL 1.svg',
-    '/images/supplier-6-R_aNWCx7 1.svg',
-    '/images/supplier-7-Cco6x8Cf 1.svg',
-    '/images/supplier-3-Btnowtmc 1.svg',
-    '/images/supplier-4-C2r7Wi7a 1.svg',
-    '/images/supplier-5-ClfzecGL 1.svg',
-    '/images/supplier-6-R_aNWCx7 1.svg',
-    '/images/supplier-7-Cco6x8Cf 1.svg',
-  ]
+  // Sort suppliers by displayOrder and create array of image URLs
+  const sortedSuppliers = useMemo(() => {
+    if (!suppliers || suppliers.length === 0) return []
+    
+    return [...suppliers]
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+      .filter(supplier => supplier.image?.url) // Only include suppliers with images
+  }, [suppliers])
 
   // Auto-play functionality
   useEffect(() => {
-    if (!api) return
+    if (!api || sortedSuppliers.length === 0) return
 
     const interval = setInterval(() => {
       if (api.canScrollNext()) {
@@ -38,7 +34,7 @@ function TrustedPartners() {
     }, 3000) // Change slide every 3 seconds
 
     return () => clearInterval(interval)
-  }, [api])
+  }, [api, sortedSuppliers.length])
 
   return (
     <section 
@@ -74,20 +70,53 @@ function TrustedPartners() {
             className="w-full"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
-              {suppliers.map((logo, index) => (
-                <CarouselItem
-                  key={index}
-                  className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
-                >
-                  <div className="flex items-center justify-center group transition-all duration-300 hover:scale-110 p-4">
-                    <img
-                      src={logo}
-                      alt={`Supplier ${index + 1}`}
-                      className="max-w-full max-h-20 md:max-h-24 object-contain grayscale group-hover:grayscale-0 transition-all duration-300 opacity-60 group-hover:opacity-100"
-                    />
+              {loading && sortedSuppliers.length === 0 ? (
+                <CarouselItem className="pl-2 md:pl-4 basis-full">
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      Loading partners...
+                    </div>
                   </div>
                 </CarouselItem>
-              ))}
+              ) : sortedSuppliers.length > 0 ? (
+                sortedSuppliers.map((supplier, index) => (
+                  <CarouselItem
+                    key={supplier._id || supplier.slug || index}
+                    className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
+                  >
+                    <div className="flex items-center justify-center group transition-all duration-300 hover:scale-110 p-4">
+                      {supplier.websiteUrl ? (
+                        <a
+                          href={supplier.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src={supplier.image.url}
+                            alt={supplier.image.alt || supplier.name || `Supplier ${index + 1}`}
+                            className="max-w-full max-h-20 md:max-h-24 object-contain grayscale group-hover:grayscale-0 transition-all duration-300 opacity-60 group-hover:opacity-100 cursor-pointer"
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={supplier.image.url}
+                          alt={supplier.image.alt || supplier.name || `Supplier ${index + 1}`}
+                          className="max-w-full max-h-20 md:max-h-24 object-contain grayscale group-hover:grayscale-0 transition-all duration-300 opacity-60 group-hover:opacity-100"
+                        />
+                      )}
+                    </div>
+                  </CarouselItem>
+                ))
+              ) : (
+                <CarouselItem className="pl-2 md:pl-4 basis-full">
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      No partners available
+                    </div>
+                  </div>
+                </CarouselItem>
+              )}
             </CarouselContent>
 
             {/* Navigation Arrows */}

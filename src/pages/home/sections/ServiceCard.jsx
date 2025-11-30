@@ -1,8 +1,12 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { getLucideIcon } from '@/utils/lucideIcons'
 
-function ServiceCard({ icon: Icon, title, description, link, delay = 0 }) {
+function ServiceCard({ icon, title, description, link, delay = 0 }) {
+  // Get icon component from icon name string
+  const IconComponent = typeof icon === 'string' ? getLucideIcon(icon) : icon
+  const Icon = IconComponent
   const [isHovered, setIsHovered] = useState(false)
 
   return (

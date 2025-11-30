@@ -7,12 +7,9 @@ import axiosInstance from '@/lib/axios'
 
 // Example API endpoints structure
 export const apiService = {
-  // Services
-  getServices: () => axiosInstance.get('/services'),
-  getServiceById: (id) => axiosInstance.get(`/services/${id}`),
-  createService: (data) => axiosInstance.post('/services', data),
-  updateService: (id, data) => axiosInstance.put(`/services/${id}`, data),
-  deleteService: (id) => axiosInstance.delete(`/services/${id}`),
+  // Services - Public Routes
+  getServices: (params) => axiosInstance.get('/services', { params }),
+  getServiceBySlug: (slug) => axiosInstance.get(`/services/${slug}`),
 
   // Industries
   getIndustries: () => axiosInstance.get('/industries'),
@@ -27,13 +24,14 @@ export const apiService = {
   getTeamMemberById: (id) => axiosInstance.get(`/team-members/${id}`),
 
   // Contact Form
-  submitContactForm: (data) => axiosInstance.post('/contact', data),
+  submitContactForm: (data) => axiosInstance.post('/contacts', data),
 
-  // Trusted Partners/Suppliers
-  getSuppliers: () => axiosInstance.get('/suppliers'),
+  // Suppliers - Public Routes
+  getSuppliers: (params) => axiosInstance.get('/suppliers', { params }),
+  getSupplierBySlug: (slug) => axiosInstance.get(`/suppliers/${slug}`),
 
   // Quotes
-  getQuote: (data) => axiosInstance.post('/quotes', data),
+  submitQuoteForm: (data) => axiosInstance.post('/quotes', data),
 
   // News/Blog
   getNews: (params) => axiosInstance.get('/news', { params }),
@@ -76,6 +74,16 @@ export const apiService = {
 
   // Theme - Public Routes
   getActiveTheme: () => axiosInstance.get('/theme'),
+
+  // Why Trust Us - Public Routes
+  getTrustCards: () => axiosInstance.get('/why-trust-us'),
+
+  // How We Work - Public Routes
+  getHowWeWorkSteps: () => axiosInstance.get('/how-we-work'),
+
+  // FAQs - Public Routes
+  getFAQs: (params) => axiosInstance.get('/faqs', { params }),
+  getFAQCategories: () => axiosInstance.get('/faqs/categories'),
 
   // Theme - Admin Routes
   getAllThemes: (params) => axiosInstance.get('/theme/admin/all', { params }),

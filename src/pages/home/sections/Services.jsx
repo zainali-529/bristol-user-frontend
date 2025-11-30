@@ -1,68 +1,14 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Zap, Flame, CreditCard, Users, TrendingUp, Shield, BarChart3 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import ServiceCard from './ServiceCard'
+import { useServicesRedux } from '@/hooks/useServicesRedux'
 
 function Services() {
-  // Sample service data - will be from API later
-  const services = [
-    {
-      id: 1,
-      icon: Zap,
-      title: 'Electricity',
-      description: "We're on call day and night to tackle gas or electricity faults and minimise downtime.",
-      link: '/services/electricity',
-    },
-    {
-      id: 2,
-      icon: Flame,
-      title: 'Gas',
-      description: "Comprehensive gas supply solutions with competitive rates and reliable service for your business.",
-      link: '/services/gas',
-    },
-    {
-      id: 3,
-      icon: CreditCard,
-      title: 'Card Machines',
-      description: "Modern payment solutions to help your business accept payments seamlessly and securely.",
-      link: '/services/card-machines',
-    },
-    {
-      id: 4,
-      icon: TrendingUp,
-      title: 'Energy Management',
-      description: "Advanced analytics and monitoring to optimize your energy consumption and reduce costs.",
-      link: '/services/energy-management',
-    },
-    {
-      id: 5,
-      icon: Shield,
-      title: 'Contract Management',
-      description: "Expert contract negotiation and management to ensure you get the best energy deals.",
-      link: '/services/contract-management',
-    },
-    {
-      id: 6,
-      icon: BarChart3,
-      title: 'Energy Analytics',
-      description: "Data-driven insights to help you understand and optimize your energy usage patterns.",
-      link: '/services/energy-analytics',
-    },
-    {
-      id: 7,
-      icon: Users,
-      title: 'Multi-site Solutions',
-      description: "Centralized management for businesses with multiple locations across the UK.",
-      link: '/services/multi-site',
-    },
-    {
-      id: 8,
-      icon: TrendingUp,
-      title: 'Sustainability',
-      description: "Green energy solutions and carbon reduction strategies for environmentally conscious businesses.",
-      link: '/services/sustainability',
-    },
-  ]
+  const { services, loading } = useServicesRedux({ featured: false })
+
+  // Limit to 8 services for home page
+  const displayServices = services.slice(0, 8)
 
   return (
     <section 
@@ -130,25 +76,39 @@ function Services() {
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {services.map((service, index) => (
-            <div
-              key={service.id}
-              className="service-card-animate"
-              style={{
-                animationDelay: `${index * 100}ms`,
-              }}
-            >
-              <ServiceCard
-                icon={service.icon}
-                title={service.title}
-                description={service.description}
-                link={service.link}
-                delay={index * 100}
-              />
+        {loading && displayServices.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+              Loading services...
             </div>
-          ))}
-        </div>
+          </div>
+        ) : displayServices.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {displayServices.map((service, index) => (
+              <div
+                key={service._id || service.slug}
+                className="service-card-animate"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                }}
+              >
+                <ServiceCard
+                  icon={service.cardIcon}
+                  title={service.title}
+                  description={service.cardDescription}
+                  link={`/services/${service.slug}`}
+                  delay={index * 100}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+              No services available
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )

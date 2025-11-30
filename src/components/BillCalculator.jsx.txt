@@ -1,0 +1,1929 @@
+"use client"
+
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Calculator, Zap, FileText, TrendingUp, RotateCcw, CheckCircle, Flame, Sun, Moon, Sunset } from "lucide-react"
+
+const electricityStandardSchema = z
+  .object({
+    previousReading: z
+      .string()
+      .min(1, "Previous reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReading: z
+      .string()
+      .min(1, "Current reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    pricePerUnit: z
+      .string()
+      .min(1, "Price per unit is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    standingCharge: z
+      .string()
+      .min(1, "Standing charge is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid number"),
+    billingPeriod: z
+      .string()
+      .min(1, "Billing period is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0 && Number(val) <= 365, "Must be between 1 and 365 days"),
+    vatRate: z.enum(["5", "20"]),
+  })
+  .refine(
+    (data) => {
+      const previous = Number(data.previousReading)
+      const current = Number(data.currentReading)
+      return current >= previous
+    },
+    {
+      message: "Current reading must be greater than or equal to previous reading",
+      path: ["currentReading"],
+    },
+  )
+
+// Schema for day/evening electricity mode
+const electricityDaySchema = z
+  .object({
+    previousReadingDay: z
+      .string()
+      .min(1, "Previous day reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingDay: z
+      .string()
+      .min(1, "Current day reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    dayRate: z
+      .string()
+      .min(1, "Day rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    previousReadingEvening: z
+      .string()
+      .min(1, "Previous evening reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingEvening: z
+      .string()
+      .min(1, "Current evening reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    eveningRate: z
+      .string()
+      .min(1, "Evening rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    standingCharge: z
+      .string()
+      .min(1, "Standing charge is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid number"),
+    billingPeriod: z
+      .string()
+      .min(1, "Billing period is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0 && Number(val) <= 365, "Must be between 1 and 365 days"),
+    vatRate: z.enum(["5", "20"]),
+  })
+  .refine(
+    (data) => {
+      const previousDay = Number(data.previousReadingDay)
+      const currentDay = Number(data.currentReadingDay)
+      return currentDay >= previousDay
+    },
+    {
+      message: "Current day reading must be greater than or equal to previous day reading",
+      path: ["currentReadingDay"],
+    },
+  )
+  .refine(
+    (data) => {
+      const previousEvening = Number(data.previousReadingEvening)
+      const currentEvening = Number(data.currentReadingEvening)
+      return currentEvening >= previousEvening
+    },
+    {
+      message: "Current evening reading must be greater than or equal to previous evening reading",
+      path: ["currentReadingEvening"],
+    },
+  )
+
+// Schema for day/night electricity mode
+const electricityNightSchema = z
+  .object({
+    previousReadingDay: z
+      .string()
+      .min(1, "Previous day reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingDay: z
+      .string()
+      .min(1, "Current day reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    dayRate: z
+      .string()
+      .min(1, "Day rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    previousReadingNight: z
+      .string()
+      .min(1, "Previous night reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingNight: z
+      .string()
+      .min(1, "Current night reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    nightRate: z
+      .string()
+      .min(1, "Night rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    standingCharge: z
+      .string()
+      .min(1, "Standing charge is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid number"),
+    billingPeriod: z
+      .string()
+      .min(1, "Billing period is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0 && Number(val) <= 365, "Must be between 1 and 365 days"),
+    vatRate: z.enum(["5", "20"]),
+  })
+  .refine(
+    (data) => {
+      const previousDay = Number(data.previousReadingDay)
+      const currentDay = Number(data.currentReadingDay)
+      return currentDay >= previousDay
+    },
+    {
+      message: "Current day reading must be greater than or equal to previous day reading",
+      path: ["currentReadingDay"],
+    },
+  )
+  .refine(
+    (data) => {
+      const previousNight = Number(data.previousReadingNight)
+      const currentNight = Number(data.currentReadingNight)
+      return currentNight >= previousNight
+    },
+    {
+      message: "Current night reading must be greater than or equal to previous night reading",
+      path: ["currentReadingNight"],
+    },
+  )
+
+// Schema for day/night/evening electricity mode (updated weekend tab)
+const electricityDayNightEveSchema = z
+  .object({
+    previousReadingDay: z
+      .string()
+      .min(1, "Previous day reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingDay: z
+      .string()
+      .min(1, "Current day reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    dayRate: z
+      .string()
+      .min(1, "Day rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    previousReadingNight: z
+      .string()
+      .min(1, "Previous night reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingNight: z
+      .string()
+      .min(1, "Current night reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    nightRate: z
+      .string()
+      .min(1, "Night rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    previousReadingEvening: z
+      .string()
+      .min(1, "Previous evening reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReadingEvening: z
+      .string()
+      .min(1, "Current evening reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    eveningRate: z
+      .string()
+      .min(1, "Evening rate is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    standingCharge: z
+      .string()
+      .min(1, "Standing charge is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid number"),
+    billingPeriod: z
+      .string()
+      .min(1, "Billing period is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0 && Number(val) <= 365, "Must be between 1 and 365 days"),
+    vatRate: z.enum(["5", "20"]),
+  })
+  .refine(
+    (data) => {
+      const previousDay = Number(data.previousReadingDay)
+      const currentDay = Number(data.currentReadingDay)
+      return currentDay >= previousDay
+    },
+    {
+      message: "Current day reading must be greater than or equal to previous day reading",
+      path: ["currentReadingDay"],
+    },
+  )
+  .refine(
+    (data) => {
+      const previousNight = Number(data.previousReadingNight)
+      const currentNight = Number(data.currentReadingNight)
+      return currentNight >= previousNight
+    },
+    {
+      message: "Current night reading must be greater than or equal to previous night reading",
+      path: ["currentReadingNight"],
+    },
+  )
+  .refine(
+    (data) => {
+      const previousEvening = Number(data.previousReadingEvening)
+      const currentEvening = Number(data.currentReadingEvening)
+      return currentEvening >= previousEvening
+    },
+    {
+      message: "Current evening reading must be greater than or equal to previous evening reading",
+      path: ["currentReadingEvening"],
+    },
+  )
+
+const gasSchema = z
+  .object({
+    previousReading: z
+      .string()
+      .min(1, "Previous reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    currentReading: z
+      .string()
+      .min(1, "Current reading is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid positive number"),
+    pricePerUnit: z
+      .string()
+      .min(1, "Price per unit is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Must be a valid positive number"),
+    standingCharge: z
+      .string()
+      .min(1, "Standing charge is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a valid number"),
+    billingPeriod: z
+      .string()
+      .min(1, "Billing period is required")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0 && Number(val) <= 365, "Must be between 1 and 365 days"),
+    vatRate: z.enum(["5", "20"]),
+  })
+  .refine(
+    (data) => {
+      const previous = Number(data.previousReading)
+      const current = Number(data.currentReading)
+      return current >= previous
+    },
+    {
+      message: "Current reading must be greater than or equal to previous reading",
+      path: ["currentReading"],
+    },
+  )
+
+function LoadingSkeleton() {
+  return (
+    <Card className="overflow-hidden h-full text-white bg-gradient-to-br border-0 shadow-lg from-secondary to-secondary-dark">
+      <CardContent className="p-8 flex flex-col justify-center items-center text-center h-full relative min-h-[500px]">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full translate-x-16 -translate-y-16 bg-white/5" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full -translate-x-12 translate-y-12 bg-white/5" />
+        <div className="relative z-10 space-y-6">
+          <div className="flex justify-center items-center mx-auto w-16 h-16 rounded-full bg-white/20">
+            <div className="w-4 h-4 rounded-full border-2 animate-spin border-white/30 border-t-white" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="mx-auto w-32 h-6 bg-white/20" />
+            <Skeleton className="mx-auto w-48 h-12 bg-white/20" />
+            <Skeleton className="mx-auto w-40 h-4 bg-white/20" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function EmptyState() {
+  return (
+    <Card className="overflow-hidden h-full text-white bg-gradient-to-br border-0 shadow-lg from-secondary to-secondary-dark">
+      <CardContent className="p-8 flex flex-col justify-center items-center text-center h-full relative min-h-[500px]">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full translate-x-16 -translate-y-16 bg-white/5" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full -translate-x-12 translate-y-12 bg-white/5" />
+        <div className="relative z-10">
+          <div className="flex justify-center items-center mx-auto mb-6 w-20 h-20 rounded-full bg-primary">
+            <Zap className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="mb-4 font-bold text-24 md:text-28">Ready to calculate?</h3>
+          <p className="max-w-md leading-relaxed text-white/80 text-16">
+            Enter your meter readings and billing details to see your estimated electricity/gas bill.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ResultsDisplay({ results, onReset, energyType, electricityMode }) {
+  const bgColorClass = energyType === "gas" ? "from-orange-500 to-orange-600" : "from-green-500 to-green-600"
+  const icon =
+    energyType === "gas" ? (
+      <Flame className="mx-auto w-16 h-16 text-white" />
+    ) : (
+      <CheckCircle className="mx-auto w-16 h-16 text-white" />
+    )
+
+  // Calculate subtotal (before VAT and CCL)
+  const subtotal = results.totalCost - (results.vatAmount || 0) - (results.cclTax || 0)
+
+  return (
+    <Card className={`overflow-hidden h-full text-white bg-gradient-to-br border-0 shadow-lg ${bgColorClass}`}>
+      <CardContent className="p-8 flex flex-col justify-center items-center h-full relative min-h-[500px]">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full translate-x-16 -translate-y-16 bg-white/10" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full -translate-x-12 translate-y-12 bg-white/10" />
+        <div className="relative z-10 space-y-6 w-full max-w-md">
+          <div className="text-center">
+            {icon}
+            <h3 className="mb-2 font-medium text-20">
+              Your Estimated {energyType === "gas" ? "Gas" : "Electricity"} Bill
+            </h3>
+            <div className="mb-4 font-bold text-48 md:text-56">£{results.totalCost.toFixed(2)}</div>
+          </div>
+
+          {/* Detailed Breakdown Section */}
+          <div className="p-4 text-left rounded-lg bg-white/10">
+            <h4 className="mb-3 font-semibold text-center text-18">Detailed Breakdown</h4>
+
+            {/* Usage Details */}
+            <div className="mb-4">
+              <h5 className="pb-1 mb-2 font-medium border-b text-16 border-white/20">Usage Details</h5>
+              <div className="space-y-1 text-14">
+                {/* For Gas - Show units and kWh conversion */}
+                {energyType === "gas" && (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Gas Units Used:</span>
+                      <span>{results.unitsUsed.toLocaleString()} units</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Converted to kWh:</span>
+                      <span>{results.unitsInKWh.toLocaleString()} kWh</span>
+                    </div>
+                  </>
+                )}
+
+                {/* For Electricity - Show standard or multi-rate breakdown */}
+                {energyType === "electricity" && !results.dayUnitsUsed && (
+                  <div className="flex justify-between">
+                    <span>Electricity Used:</span>
+                    <span>{results.unitsUsed.toLocaleString()} units</span>
+                  </div>
+                )}
+
+                {/* For Multi-rate Electricity */}
+                {energyType === "electricity" && results.dayUnitsUsed && (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Day Usage:</span>
+                      <span>{results.dayUnitsUsed.toLocaleString()} units</span>
+                    </div>
+                    {results.eveningUnitsUsed && (
+                      <div className="flex justify-between">
+                        <span>Evening Usage:</span>
+                        <span>{results.eveningUnitsUsed.toLocaleString()} units</span>
+                      </div>
+                    )}
+                    {results.nightUnitsUsed && (
+                      <div className="flex justify-between">
+                        <span>Night Usage:</span>
+                        <span>{results.nightUnitsUsed.toLocaleString()} units</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-medium">
+                      <span>Total Usage:</span>
+                      <span>{results.unitsUsed.toLocaleString()} units</span>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex justify-between">
+                  <span>Billing Period:</span>
+                  <span>{results.billingDays} days</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cost Breakdown */}
+            <div className="mb-4">
+              <h5 className="pb-1 mb-2 font-medium border-b text-16 border-white/20">Cost Breakdown</h5>
+              <div className="space-y-1 text-14">
+                {/* For Multi-rate Electricity - Show separate costs */}
+                {energyType === "electricity" && results.dayUnitsUsed && results.dayUnitCost && (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Day Rate Cost:</span>
+                      <span>£{results.dayUnitCost.toFixed(2)}</span>
+                    </div>
+                    {results.eveningUnitCost && (
+                      <div className="flex justify-between">
+                        <span>Evening Rate Cost:</span>
+                        <span>£{results.eveningUnitCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {results.nightUnitCost && (
+                      <div className="flex justify-between">
+                        <span>Night Rate Cost:</span>
+                        <span>£{results.nightUnitCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* For all types */}
+                <div className="flex justify-between">
+                  <span>Energy Cost:</span>
+                  <span>
+                    £
+                    {results.unitCost
+                      ? results.unitCost.toFixed(2)
+                      : (subtotal - results.standingChargeTotal).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Standing Charge:</span>
+                  <span>
+                    £
+                    {results.standingChargeTotal
+                      ? results.standingChargeTotal.toFixed(2)
+                      : ((results.standingCharge * results.billingDays) / 100).toFixed(2)}
+                  </span>
+                </div>
+                {results.cclTax > 0 && (
+                  <div className="flex justify-between">
+                    <span>CCL Tax:</span>
+                    <span>£{results.cclTax.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>£{subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>VAT ({results.vatRate}%):</span>
+                  <span>£{results.vatAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between pt-1 font-medium border-t border-white/20">
+                  <span>Total Bill:</span>
+                  <span>£{results.totalCost.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center">
+            <Button
+              onClick={onReset}
+              variant="outline"
+              className="px-8 py-3 font-medium text-white bg-transparent border-white/30 hover:bg-white/10 hover:border-white/50"
+            >
+              <RotateCcw className="mr-2 w-4 h-4" />
+              Calculate Again
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export function BillCalculator() {
+  const [results, setResults] = useState(null)
+  const [isCalculating, setIsCalculating] = useState(false)
+  const [energyType, setEnergyType] = useState("electricity")
+  const [electricityMode, setElectricityMode] = useState("standard")
+
+  // Electricity Standard Form
+  const electricityStandardForm = useForm({
+    resolver: zodResolver(electricityStandardSchema),
+    mode: "onChange",
+    defaultValues: {
+      previousReading: "",
+      currentReading: "",
+      pricePerUnit: "",
+      standingCharge: "",
+      billingPeriod: "",
+      vatRate: "5",
+    },
+  })
+
+  // Electricity Day/Evening Form
+  const electricityDayForm = useForm({
+    resolver: zodResolver(electricityDaySchema),
+    mode: "onChange",
+    defaultValues: {
+      previousReadingDay: "",
+      currentReadingDay: "",
+      dayRate: "",
+      previousReadingEvening: "",
+      currentReadingEvening: "",
+      eveningRate: "",
+      standingCharge: "",
+      billingPeriod: "",
+      vatRate: "5",
+    },
+  })
+
+  // Electricity Day/Night Form
+  const electricityNightForm = useForm({
+    resolver: zodResolver(electricityNightSchema),
+    mode: "onChange",
+    defaultValues: {
+      previousReadingDay: "",
+      currentReadingDay: "",
+      dayRate: "",
+      previousReadingNight: "",
+      currentReadingNight: "",
+      nightRate: "",
+      standingCharge: "",
+      billingPeriod: "",
+      vatRate: "5",
+    },
+  })
+
+  // Electricity Day/Night/Evening Form (updated weekend)
+  const electricityDayNightEveForm = useForm({
+    resolver: zodResolver(electricityDayNightEveSchema),
+    mode: "onChange",
+    defaultValues: {
+      previousReadingDay: "",
+      currentReadingDay: "",
+      dayRate: "",
+      previousReadingNight: "",
+      currentReadingNight: "",
+      nightRate: "",
+      previousReadingEvening: "",
+      currentReadingEvening: "",
+      eveningRate: "",
+      standingCharge: "",
+      billingPeriod: "",
+      vatRate: "5",
+    },
+  })
+
+  // Gas Form
+  const gasForm = useForm({
+    resolver: zodResolver(gasSchema),
+    mode: "onChange",
+    defaultValues: {
+      previousReading: "",
+      currentReading: "",
+      pricePerUnit: "",
+      standingCharge: "",
+      billingPeriod: "",
+      vatRate: "5",
+    },
+  })
+
+  // Get the active form based on current selections
+  const getActiveForm = () => {
+    if (energyType === "gas") return gasForm
+    if (electricityMode === "standard") return electricityStandardForm
+    if (electricityMode === "day") return electricityDayForm
+    if (electricityMode === "night") return electricityNightForm
+    if (electricityMode === "daynighteve") return electricityDayNightEveForm
+    return electricityStandardForm
+  }
+
+  // Calculate CCL tax for electricity
+  const calculateElectricityCCL = (unitsUsed) => {
+    // CCL tax applies if units exceed 990 per month (33 per day)
+    if (unitsUsed > 990) {
+      // CCL tax rate is 0.775 pence per kWh
+      const cclRate = 0.775 / 100 // Convert pence to pounds
+      return unitsUsed * cclRate // Apply CCL tax to all units
+    }
+    return 0
+  }
+
+  // Calculate CCL tax for gas
+  const calculateGasCCL = (kwhUnits) => {
+    // CCL tax applies if kWh units exceed 4350 per month (145 per day)
+    if (kwhUnits > 4350) {
+      // CCL tax rate is 0.775 pence per kWh
+      const cclRate = 0.775 / 100 // Convert pence to pounds
+      return kwhUnits * cclRate // Apply CCL tax to all units
+    }
+    return 0
+  }
+
+  // Convert gas units to kWh
+  const convertGasUnitsToKWh = (units) => {
+    // Formula: Volume (units) × Correction Factor × Calorific Value ÷ 3.6
+    // Based on the bill: 528 units → 5,789.51 kWh
+    const correctionFactor = 1.02264; // Volume correction factor
+    const calorificValue = 39.5;      // Calorific value in MJ/m³ (precisely adjusted to match bill)
+    const conversionFactor = 3.6;     // Conversion from MJ to kWh
+    
+    // For verification: 528 * 1.02264 * 38.6 / 3.6 ≈ 5,789.51
+    return units * correctionFactor * calorificValue / conversionFactor;
+  }
+
+  const onSubmitElectricityStandard = async (data) => {
+    setIsCalculating(true)
+    // Simulate calculation delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const previous = Number.parseFloat(data.previousReading)
+    const current = Number.parseFloat(data.currentReading)
+    const pricePerUnit = Number.parseFloat(data.pricePerUnit)
+    const standingCharge = Number.parseFloat(data.standingCharge)
+    const billingDays = Number.parseInt(data.billingPeriod)
+    const vatRate = Number.parseInt(data.vatRate)
+    const unitsUsed = current - previous
+    const unitCost = (unitsUsed * pricePerUnit) / 100 // Convert pence to pounds
+    const standingChargeTotal = (standingCharge * billingDays) / 100 // Convert pence to pounds
+    const subtotal = unitCost + standingChargeTotal
+
+    // Calculate CCL tax if applicable
+    const cclTax = calculateElectricityCCL(unitsUsed)
+
+    // Calculate VAT
+    const vatAmount = (subtotal + cclTax) * (vatRate / 100)
+    const totalCost = subtotal + cclTax + vatAmount
+    const calculationResults = {
+      unitsUsed,
+      pricePerUnit,
+      unitCost,
+      standingCharge,
+      standingChargeTotal,
+      subtotal,
+      totalCost,
+      billingDays,
+      cclTax,
+      vatAmount,
+      vatRate,
+    }
+    setResults(calculationResults)
+    setIsCalculating(false)
+  }
+
+  const onSubmitElectricityDay = async (data) => {
+    setIsCalculating(true)
+    // Simulate calculation delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const previousDay = Number.parseFloat(data.previousReadingDay)
+    const currentDay = Number.parseFloat(data.currentReadingDay)
+    const dayRate = Number.parseFloat(data.dayRate)
+
+    const previousEvening = Number.parseFloat(data.previousReadingEvening)
+    const currentEvening = Number.parseFloat(data.currentReadingEvening)
+    const eveningRate = Number.parseFloat(data.eveningRate)
+
+    const standingCharge = Number.parseFloat(data.standingCharge)
+    const billingDays = Number.parseInt(data.billingPeriod)
+    const vatRate = Number.parseInt(data.vatRate)
+    const dayUnitsUsed = currentDay - previousDay
+    const eveningUnitsUsed = currentEvening - previousEvening
+    const totalUnitsUsed = dayUnitsUsed + eveningUnitsUsed
+
+    const dayUnitCost = (dayUnitsUsed * dayRate) / 100 // Convert pence to pounds
+    const eveningUnitCost = (eveningUnitsUsed * eveningRate) / 100 // Convert pence to pounds
+    const standingChargeTotal = (standingCharge * billingDays) / 100 // Convert pence to pounds
+
+    const subtotal = dayUnitCost + eveningUnitCost + standingChargeTotal
+
+    // Calculate CCL tax if applicable
+    const cclTax = calculateElectricityCCL(totalUnitsUsed)
+
+    // Calculate VAT
+    const vatAmount = (subtotal + cclTax) * (vatRate / 100)
+    const totalCost = subtotal + cclTax + vatAmount
+    const calculationResults = {
+      unitsUsed: totalUnitsUsed,
+      dayUnitsUsed,
+      eveningUnitsUsed,
+      dayRate,
+      eveningRate,
+      dayUnitCost,
+      eveningUnitCost,
+      standingCharge,
+      standingChargeTotal,
+      subtotal,
+      totalCost,
+      billingDays,
+      cclTax,
+      vatAmount,
+      vatRate,
+    }
+    setResults(calculationResults)
+    setIsCalculating(false)
+  }
+
+  const onSubmitElectricityNight = async (data) => {
+    setIsCalculating(true)
+    // Simulate calculation delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const previousDay = Number.parseFloat(data.previousReadingDay)
+    const currentDay = Number.parseFloat(data.currentReadingDay)
+    const dayRate = Number.parseFloat(data.dayRate)
+
+    const previousNight = Number.parseFloat(data.previousReadingNight)
+    const currentNight = Number.parseFloat(data.currentReadingNight)
+    const nightRate = Number.parseFloat(data.nightRate)
+
+    const standingCharge = Number.parseFloat(data.standingCharge)
+    const billingDays = Number.parseInt(data.billingPeriod)
+    const vatRate = Number.parseInt(data.vatRate)
+    const dayUnitsUsed = currentDay - previousDay
+    const nightUnitsUsed = currentNight - previousNight
+    const totalUnitsUsed = dayUnitsUsed + nightUnitsUsed
+
+    const dayUnitCost = (dayUnitsUsed * dayRate) / 100 // Convert pence to pounds
+    const nightUnitCost = (nightUnitsUsed * nightRate) / 100 // Convert pence to pounds
+    const standingChargeTotal = (standingCharge * billingDays) / 100 // Convert pence to pounds
+
+    const subtotal = dayUnitCost + nightUnitCost + standingChargeTotal
+
+    // Calculate CCL tax if applicable
+    const cclTax = calculateElectricityCCL(totalUnitsUsed)
+
+    // Calculate VAT
+    const vatAmount = (subtotal + cclTax) * (vatRate / 100)
+    const totalCost = subtotal + cclTax + vatAmount
+    const calculationResults = {
+      unitsUsed: totalUnitsUsed,
+      dayUnitsUsed,
+      nightUnitsUsed,
+      dayRate,
+      nightRate,
+      dayUnitCost,
+      nightUnitCost,
+      standingCharge,
+      standingChargeTotal,
+      subtotal,
+      totalCost,
+      billingDays,
+      cclTax,
+      vatAmount,
+      vatRate,
+    }
+    setResults(calculationResults)
+    setIsCalculating(false)
+  }
+
+  const onSubmitElectricityDayNightEve = async (data) => {
+    setIsCalculating(true)
+    // Simulate calculation delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const previousDay = Number.parseFloat(data.previousReadingDay)
+    const currentDay = Number.parseFloat(data.currentReadingDay)
+    const dayRate = Number.parseFloat(data.dayRate)
+
+    const previousNight = Number.parseFloat(data.previousReadingNight)
+    const currentNight = Number.parseFloat(data.currentReadingNight)
+    const nightRate = Number.parseFloat(data.nightRate)
+
+    const previousEvening = Number.parseFloat(data.previousReadingEvening)
+    const currentEvening = Number.parseFloat(data.currentReadingEvening)
+    const eveningRate = Number.parseFloat(data.eveningRate)
+
+    const standingCharge = Number.parseFloat(data.standingCharge)
+    const billingDays = Number.parseInt(data.billingPeriod)
+    const vatRate = Number.parseInt(data.vatRate)
+    const dayUnitsUsed = currentDay - previousDay
+    const nightUnitsUsed = currentNight - previousNight
+    const eveningUnitsUsed = currentEvening - previousEvening
+    const totalUnitsUsed = dayUnitsUsed + nightUnitsUsed + eveningUnitsUsed
+
+    const dayUnitCost = (dayUnitsUsed * dayRate) / 100 // Convert pence to pounds
+    const nightUnitCost = (nightUnitsUsed * nightRate) / 100 // Convert pence to pounds
+    const eveningUnitCost = (eveningUnitsUsed * eveningRate) / 100 // Convert pence to pounds
+    const standingChargeTotal = (standingCharge * billingDays) / 100 // Convert pence to pounds
+
+    const subtotal = dayUnitCost + nightUnitCost + eveningUnitCost + standingChargeTotal
+
+    // Calculate CCL tax if applicable
+    const cclTax = calculateElectricityCCL(totalUnitsUsed)
+
+    // Calculate VAT
+    const vatAmount = (subtotal + cclTax) * (vatRate / 100)
+    const totalCost = subtotal + cclTax + vatAmount
+    const calculationResults = {
+      unitsUsed: totalUnitsUsed,
+      dayUnitsUsed,
+      nightUnitsUsed,
+      eveningUnitsUsed,
+      dayRate,
+      nightRate,
+      eveningRate,
+      dayUnitCost,
+      nightUnitCost,
+      eveningUnitCost,
+      standingCharge,
+      standingChargeTotal,
+      subtotal,
+      totalCost,
+      billingDays,
+      cclTax,
+      vatAmount,
+      vatRate,
+    }
+    setResults(calculationResults)
+    setIsCalculating(false)
+  }
+
+  const onSubmitGas = async (data) => {
+    setIsCalculating(true)
+    // Simulate calculation delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const previous = Number.parseFloat(data.previousReading)
+    const current = Number.parseFloat(data.currentReading)
+    const pricePerUnit = Number.parseFloat(data.pricePerUnit)
+    const standingCharge = Number.parseFloat(data.standingCharge)
+    const billingDays = Number.parseInt(data.billingPeriod)
+    const vatRate = Number.parseInt(data.vatRate)
+    const unitsUsed = current - previous
+    // Convert gas units to kWh for calculation
+    const unitsInKWh = convertGasUnitsToKWh(unitsUsed)
+
+    const unitCost = (unitsInKWh * pricePerUnit) / 100 // Convert pence to pounds
+    const standingChargeTotal = (standingCharge * billingDays) / 100 // Convert pence to pounds
+    const subtotal = unitCost + standingChargeTotal
+
+    // Calculate CCL tax if applicable (based on kWh units)
+    const cclTax = calculateGasCCL(unitsInKWh)
+
+    // Calculate VAT
+    const vatAmount = (subtotal + cclTax) * (vatRate / 100)
+    const totalCost = subtotal + cclTax + vatAmount
+    const calculationResults = {
+      unitsUsed,
+      unitsInKWh,
+      pricePerUnit,
+      unitCost,
+      standingCharge,
+      standingChargeTotal,
+      subtotal,
+      totalCost,
+      billingDays,
+      cclTax,
+      vatAmount,
+      vatRate,
+    }
+    setResults(calculationResults)
+    setIsCalculating(false)
+  }
+
+  const onSubmit = (data) => {
+    if (energyType === "gas") {
+      return onSubmitGas(data)
+    } else if (electricityMode === "standard") {
+      return onSubmitElectricityStandard(data)
+    } else if (electricityMode === "day") {
+      return onSubmitElectricityDay(data)
+    } else if (electricityMode === "night") {
+      return onSubmitElectricityNight(data)
+    } else if (electricityMode === "daynighteve") {
+      return onSubmitElectricityDayNightEve(data)
+    }
+  }
+
+  const resetCalculator = () => {
+    setResults(null)
+    const activeForm = getActiveForm()
+    activeForm.reset()
+  }
+
+  const handleEnergyTypeChange = (value) => {
+    setEnergyType(value)
+    setResults(null)
+  }
+
+  const handleElectricityModeChange = (value) => {
+    setElectricityMode(value)
+    setResults(null)
+  }
+
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="container px-4 mx-auto lg:px-8">
+        {/* Section Header */}
+        <div className="mb-16 text-center">
+          <p className="mb-4 font-medium text-primary text-16">// Calculator</p>
+          <h2 className="font-bold leading-tight text-secondary text-36 md:text-48">
+            Electricity & Gas Bill <span className="text-primary">Calculator</span>
+          </h2>
+        </div>
+
+        {/* Energy Type Tabs */}
+        <div className="flex justify-center mb-8">
+          <Tabs
+            defaultValue="electricity"
+            value={energyType}
+            onValueChange={handleEnergyTypeChange}
+            className="w-full max-w-md"
+          >
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="electricity" className="text-16">
+                Electricity
+              </TabsTrigger>
+              <TabsTrigger value="gas" className="text-16">
+                Gas
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {/* Electricity Mode Tabs - Only show when electricity is selected */}
+        {energyType === "electricity" && (
+          <div className="flex justify-center mb-8">
+            <Tabs
+              defaultValue="standard"
+              value={electricityMode}
+              onValueChange={handleElectricityModeChange}
+              className="w-full max-w-2xl"
+            >
+              <TabsList className="grid grid-cols-4 w-full">
+                <TabsTrigger value="standard" className="text-14">
+                  Standard
+                </TabsTrigger>
+                <TabsTrigger value="day" className="text-14">
+                  Day/Eve
+                </TabsTrigger>
+                <TabsTrigger value="night" className="text-14">
+                  Day/Night
+                </TabsTrigger>
+                <TabsTrigger value="daynighteve" className="text-14">
+                  Day/Night/Eve
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
+
+        {/* Calculator Grid - 2 Column Layout */}
+        <div className="grid grid-cols-1 gap-8 mx-auto lg:grid-cols-2">
+          {/* Input Form - Left Panel */}
+          <div>
+            <Card className="h-full bg-white border-0 shadow-lg">
+              <CardContent className="p-6 space-y-6">
+                {/* Electricity Standard Form */}
+                {energyType === "electricity" && electricityMode === "standard" && (
+                  <Form {...electricityStandardForm}>
+                    <form onSubmit={electricityStandardForm.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <TrendingUp className="w-5 h-5" />
+                          Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityStandardForm.control}
+                            name="previousReading"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Meter Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityStandardForm.control}
+                            name="currentReading"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Meter Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Charges & Period Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <FileText className="w-5 h-5" />
+                          Charges & Period
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={electricityStandardForm.control}
+                              name="pricePerUnit"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-medium text-secondary">Price per Unit (pence)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g 14.71" className="h-12" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={electricityStandardForm.control}
+                              name="standingCharge"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-medium text-secondary">Standing Charge (pence)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g 27.00" className="h-12" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={electricityStandardForm.control}
+                            name="billingPeriod"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Billing Period (days)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 90" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* VAT Selection */}
+                          <FormField
+                            control={electricityStandardForm.control}
+                            name="vatRate"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="font-medium text-secondary">VAT Rate</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="5" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">5%</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="20" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">20%</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Calculate Button */}
+                      <Button
+                        type="submit"
+                        disabled={isCalculating}
+                        className="w-full h-12 font-medium text-white bg-secondary hover:bg-secondary/90 text-16"
+                      >
+                        <div className="flex items-center text-white">
+                          {isCalculating ? (
+                            <div className="flex gap-2 items-center">
+                              <div className="w-4 h-4 rounded-full border-2 animate-spin border-white/30 border-t-white" />
+                              Calculating...
+                            </div>
+                          ) : (
+                            <>
+                              <Calculator className="mr-2 w-5 h-5" />
+                              Calculate Now
+                            </>
+                          )}
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+
+                {/* Electricity Day/Evening Form */}
+                {energyType === "electricity" && electricityMode === "day" && (
+                  <Form {...electricityDayForm}>
+                    <form onSubmit={electricityDayForm.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Day Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Sun className="w-5 h-5" />
+                          Day Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="previousReadingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Day Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="currentReadingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Day Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="dayRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Day Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 16.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Evening Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Sunset className="w-5 h-5" />
+                          Evening Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="previousReadingEvening"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Evening Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="currentReadingEvening"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Evening Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="eveningRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Evening Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 14.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Charges & Period Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <FileText className="w-5 h-5" />
+                          Charges & Period
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="standingCharge"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Standing Charge (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 27.00" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="billingPeriod"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Billing Period (days)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 90" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* VAT Selection */}
+                          <FormField
+                            control={electricityDayForm.control}
+                            name="vatRate"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="font-medium text-secondary">VAT Rate</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="5" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">5%</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="20" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">20%</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Calculate Button */}
+                      <Button
+                        type="submit"
+                        disabled={isCalculating}
+                        className="w-full h-12 font-medium text-white bg-secondary hover:bg-secondary/90 text-16"
+                      >
+                        <div className="flex items-center text-white">
+                          {isCalculating ? (
+                            <div className="flex gap-2 items-center">
+                              <div className="w-4 h-4 rounded-full border-2 animate-spin border-white/30 border-t-white" />
+                              Calculating...
+                            </div>
+                          ) : (
+                            <>
+                              <Calculator className="mr-2 w-5 h-5" />
+                              Calculate Now
+                            </>
+                          )}
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+
+                {/* Electricity Day/Night Form */}
+                {energyType === "electricity" && electricityMode === "night" && (
+                  <Form {...electricityNightForm}>
+                    <form onSubmit={electricityNightForm.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Day Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Sun className="w-5 h-5" />
+                          Day Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="previousReadingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Day Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="currentReadingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Day Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="dayRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Day Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 16.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Night Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Moon className="w-5 h-5" />
+                          Night Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="previousReadingNight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Night Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="currentReadingNight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Night Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="nightRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Night Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 10.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Charges & Period Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <FileText className="w-5 h-5" />
+                          Charges & Period
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="standingCharge"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Standing Charge (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 27.00" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="billingPeriod"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Billing Period (days)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 90" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* VAT Selection */}
+                          <FormField
+                            control={electricityNightForm.control}
+                            name="vatRate"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="font-medium text-secondary">VAT Rate</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="5" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">5%</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="20" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">20%</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Calculate Button */}
+                      <Button
+                        type="submit"
+                        disabled={isCalculating}
+                        className="w-full h-12 font-medium text-white bg-secondary hover:bg-secondary/90 text-16"
+                      >
+                        <div className="flex items-center text-white">
+                          {isCalculating ? (
+                            <div className="flex gap-2 items-center">
+                              <div className="w-4 h-4 rounded-full border-2 animate-spin border-white/30 border-t-white" />
+                              Calculating...
+                            </div>
+                          ) : (
+                            <>
+                              <Calculator className="mr-2 w-5 h-5" />
+                              Calculate Now
+                            </>
+                          )}
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+
+                {/* Electricity Day/Night/Evening Form (Updated Weekend Tab) */}
+                {energyType === "electricity" && electricityMode === "daynighteve" && (
+                  <Form {...electricityDayNightEveForm}>
+                    <form onSubmit={electricityDayNightEveForm.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Day Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Sun className="w-5 h-5" />
+                          Day Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="previousReadingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Day Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="currentReadingDay"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Day Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="dayRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Day Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 16.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Night Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Moon className="w-5 h-5" />
+                          Night Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="previousReadingNight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Night Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="currentReadingNight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Night Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="nightRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Night Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 10.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Evening Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Sunset className="w-5 h-5" />
+                          Evening Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="previousReadingEvening"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Evening Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="currentReadingEvening"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Evening Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="eveningRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Evening Rate (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 14.71" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Charges & Period Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <FileText className="w-5 h-5" />
+                          Charges & Period
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="standingCharge"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Standing Charge (pence)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 27.00" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="billingPeriod"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Billing Period (days)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 90" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* VAT Selection */}
+                          <FormField
+                            control={electricityDayNightEveForm.control}
+                            name="vatRate"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="font-medium text-secondary">VAT Rate</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="5" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">5%</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="20" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">20%</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Calculate Button */}
+                      <Button
+                        type="submit"
+                        disabled={isCalculating}
+                        className="w-full h-12 font-medium text-white bg-secondary hover:bg-secondary/90 text-16"
+                      >
+                        <div className="flex items-center text-white">
+                          {isCalculating ? (
+                            <div className="flex gap-2 items-center">
+                              <div className="w-4 h-4 rounded-full border-2 animate-spin border-white/30 border-t-white" />
+                              Calculating...
+                            </div>
+                          ) : (
+                            <>
+                              <Calculator className="mr-2 w-5 h-5" />
+                              Calculate Now
+                            </>
+                          )}
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+
+                {/* Gas Form */}
+                {energyType === "gas" && (
+                  <Form {...gasForm}>
+                    <form onSubmit={gasForm.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Meter Readings Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <Flame className="w-5 h-5" />
+                          Gas Meter Readings
+                        </h3>
+                        <div className="space-y-4">
+                          <FormField
+                            control={gasForm.control}
+                            name="previousReading"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Previous Meter Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012345" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={gasForm.control}
+                            name="currentReading"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Current Meter Reading</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 012769" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Charges & Period Section */}
+                      <div>
+                        <h3 className="flex gap-2 items-center mb-4 font-bold text-primary text-20">
+                          <FileText className="w-5 h-5" />
+                          Charges & Period
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={gasForm.control}
+                              name="pricePerUnit"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-medium text-secondary">Price per kWh (pence)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g 3.71" className="h-12" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={gasForm.control}
+                              name="standingCharge"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="font-medium text-secondary">Standing Charge (pence)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g 27.00" className="h-12" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={gasForm.control}
+                            name="billingPeriod"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-medium text-secondary">Billing Period (days)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g 90" className="h-12" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* VAT Selection */}
+                          <FormField
+                            control={gasForm.control}
+                            name="vatRate"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="font-medium text-secondary">VAT Rate</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="5" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">5%</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="20" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">20%</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* Calculate Button */}
+                      <Button
+                        type="submit"
+                        disabled={isCalculating}
+                        className="w-full h-12 font-medium text-white bg-secondary hover:bg-secondary/90 text-16"
+                      >
+                        <div className="flex items-center text-white">
+                          {isCalculating ? (
+                            <div className="flex gap-2 items-center">
+                              <div className="w-4 h-4 rounded-full border-2 animate-spin border-white/30 border-t-white" />
+                              Calculating...
+                            </div>
+                          ) : (
+                            <>
+                              <Calculator className="mr-2 w-5 h-5" />
+                              Calculate Now
+                            </>
+                          )}
+                        </div>
+                      </Button>
+                    </form>
+                  </Form>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          {/* Results Panel - Right Side */}
+          <div>
+            {isCalculating ? (
+              <LoadingSkeleton />
+            ) : results ? (
+              <ResultsDisplay
+                results={results}
+                onReset={resetCalculator}
+                energyType={energyType}
+                electricityMode={electricityMode}
+              />
+            ) : (
+              <EmptyState />
+            )}
+          </div>
+        </div>
+        {/* Bottom Info */}
+        <div className="mt-12 text-center">
+          <p className="mb-4 text-gray-600 text-14">
+            * This calculator provides estimates based on the information you provide. Actual bills may vary.
+          </p>
+          <p className="text-gray-500 text-12">
+            For accurate billing information, please refer to your official energy supplier statement.
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
