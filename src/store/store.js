@@ -6,6 +6,7 @@ import themeReducer from './slices/themeSlice';
 import whyTrustUsReducer from './slices/whyTrustUsSlice';
 import servicesReducer from './slices/servicesSlice';
 import suppliersReducer from './slices/suppliersSlice';
+import industriesReducer from './slices/industriesSlice';
 import howWeWorkReducer from './slices/howWeWorkSlice';
 
 // Redux Persist configuration for hero slice
@@ -48,6 +49,14 @@ const suppliersPersistConfig = {
   whitelist: ['suppliers', 'lastFetched'],
 };
 
+// Redux Persist configuration for industries slice
+const industriesPersistConfig = {
+  key: 'industries',
+  storage,
+  // Only persist these fields
+  whitelist: ['industries', 'lastFetched'],
+};
+
 // Redux Persist configuration for howWeWork slice
 const howWeWorkPersistConfig = {
   key: 'howWeWork',
@@ -62,6 +71,7 @@ const persistedThemeReducer = persistReducer(themePersistConfig, themeReducer);
 const persistedWhyTrustUsReducer = persistReducer(whyTrustUsPersistConfig, whyTrustUsReducer);
 const persistedServicesReducer = persistReducer(servicesPersistConfig, servicesReducer);
 const persistedSuppliersReducer = persistReducer(suppliersPersistConfig, suppliersReducer);
+const persistedIndustriesReducer = persistReducer(industriesPersistConfig, industriesReducer);
 const persistedHowWeWorkReducer = persistReducer(howWeWorkPersistConfig, howWeWorkReducer);
 
 export const store = configureStore({
@@ -71,6 +81,7 @@ export const store = configureStore({
     whyTrustUs: persistedWhyTrustUsReducer,
     services: persistedServicesReducer,
     suppliers: persistedSuppliersReducer,
+    industries: persistedIndustriesReducer,
     howWeWork: persistedHowWeWorkReducer,
     // Add other reducers here as needed
   },
@@ -97,6 +108,9 @@ export const store = configureStore({
           'suppliers/fetchSuppliers/pending',
           'suppliers/fetchSuppliers/fulfilled',
           'suppliers/fetchSuppliers/rejected',
+          'industries/fetchIndustries/pending',
+          'industries/fetchIndustries/fulfilled',
+          'industries/fetchIndustries/rejected',
           'howWeWork/fetchHowWeWorkSteps/pending',
           'howWeWork/fetchHowWeWorkSteps/fulfilled',
           'howWeWork/fetchHowWeWorkSteps/rejected',

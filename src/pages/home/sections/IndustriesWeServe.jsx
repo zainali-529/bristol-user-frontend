@@ -1,51 +1,8 @@
 import IndustryCard from './IndustryCard'
+import { useIndustriesRedux } from '@/hooks/useIndustriesRedux'
 
 function IndustriesWeServe() {
-  // Industry data - will be from API in future
-  const industries = [
-    {
-      id: 1,
-      image: "/images/about-1.jpg",
-      title: "Manufacturing",
-      description: "Reduce high-volume energy costs with flexible procurement strategies.",
-      savings: "18%",
-    },
-    {
-      id: 2,
-      image: "/images/about-2.jpg",
-      title: "Retail & Shopping",
-      description: "Save on multi-site operations with smart contract management.",
-      savings: "20%",
-    },
-    {
-      id: 3,
-      image: "/images/about-3.jpg",
-      title: "Healthcare",
-      description: "Reduce high-volume energy costs with flexible procurement strategies.",
-      savings: "22%",
-    },
-    {
-      id: 4,
-      image: "/images/about-1.jpg",
-      title: "Hospitality",
-      description: "Reduce high-volume energy costs with flexible procurement strategies.",
-      savings: "15%",
-    },
-    {
-      id: 5,
-      image: "/images/about-2.jpg",
-      title: "Property Management",
-      description: "Reduce high-volume energy costs with flexible procurement strategies.",
-      savings: "30%",
-    },
-    {
-      id: 6,
-      image: "/images/about-3.jpg",
-      title: "Technology & Data",
-      description: "Reduce high-volume energy costs with flexible procurement strategies.",
-      savings: "28%",
-    },
-  ]
+  const { industries, loading } = useIndustriesRedux()
 
   return (
     <section 
@@ -71,15 +28,28 @@ function IndustriesWeServe() {
 
         {/* Industries Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {industries.map((industry) => (
-            <IndustryCard
-              key={industry.id}
-              image={industry.image}
-              title={industry.title}
-              description={industry.description}
-              savings={industry.savings}
-            />
-          ))}
+          {loading && (!industries || industries.length === 0) ? (
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-8" style={{ color: 'var(--text-secondary)' }}>
+              Loading industries...
+            </div>
+          ) : (
+            (industries || []).map((industry) => {
+              const image = industry.imageUrl || industry.image || '/images/about-1.jpg'
+              const title = industry.title || industry.name || 'Industry'
+              const description = industry.description || industry.summary || 'Industry description'
+              const savingsValue = industry.savingsPercentage || industry.savings || null
+              const savings = typeof savingsValue === 'number' ? `${savingsValue}%` : (savingsValue || '—')
+              return (
+                <IndustryCard
+                  key={industry._id || industry.id || title}
+                  image={image}
+                  title={title}
+                  description={description}
+                  savings={savings}
+                />
+              )
+            })
+          )}
         </div>
       </div>
     </section>
