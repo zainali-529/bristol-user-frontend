@@ -53,8 +53,7 @@ function Footer() {
     <footer 
       className="relative overflow-hidden"
       style={{ 
-        backgroundColor: 'var(--primary-5)',
-        borderTop: '1px solid var(--border)'
+        backgroundColor: 'var(--primary-5)'
       }}
     >
       {/* Decorative Top Wave */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Carousel,
   CarouselContent,
@@ -7,55 +7,28 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import TestimonialCard from './TestimonialCard'
+import { useTestimonialsRedux } from '@/hooks/useTestimonialsRedux'
 
 function Testimonials() {
   const [api, setApi] = useState(null)
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
+  const { testimonials: testimonialsData, loading } = useTestimonialsRedux()
 
-  // Testimonial data - will be from API in future
-  const testimonials = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      position: "CEO",
-      company: "TechCorp Industries",
-      testimonial: "Bristol Utilities transformed our energy procurement process. We've saved over 30% on our energy costs while maintaining excellent service quality. Their team is professional, responsive, and truly understands our business needs.",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      position: "Operations Director",
-      company: "Green Manufacturing Ltd",
-      testimonial: "Working with Bristol Utilities has been a game-changer for our manufacturing operations. They helped us negotiate better rates and provided valuable insights into energy efficiency. Highly recommended!",
-      rating: 5,
-    },
-    {
-      id: 3,
-      name: "Emma Williams",
-      position: "Facilities Manager",
-      company: "Retail Solutions Group",
-      testimonial: "The team at Bristol Utilities made our multi-site energy management so much easier. Their expertise in contract negotiation and ongoing support has been invaluable. We couldn't be happier with the results.",
-      rating: 5,
-    },
-    {
-      id: 4,
-      name: "David Thompson",
-      position: "CFO",
-      company: "Healthcare Partners",
-      testimonial: "Bristol Utilities helped us reduce our energy costs significantly while ensuring compliance with all regulations. Their transparent approach and detailed reporting give us complete confidence in our energy strategy.",
-      rating: 5,
-    },
-    {
-      id: 5,
-      name: "Lisa Anderson",
-      position: "Property Manager",
-      company: "Urban Real Estate",
-      testimonial: "Managing energy across multiple properties was challenging until we partnered with Bristol Utilities. They've streamlined everything and helped us achieve substantial savings. Excellent service throughout!",
-      rating: 5,
-    },
-  ]
+  const testimonials = useMemo(() => {
+    if (!Array.isArray(testimonialsData)) return []
+    return testimonialsData
+      .filter(t => t.isActive !== false)
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+      .map((t) => ({
+        id: t._id || t.id,
+        name: t.name || 'Client',
+        position: t.position || t.title || '',
+        company: t.company || '',
+        testimonial: t.testimonial || t.quote || '',
+        rating: typeof t.rating === 'number' ? t.rating : 5,
+      }))
+  }, [testimonialsData])
 
   useEffect(() => {
     if (!api) {

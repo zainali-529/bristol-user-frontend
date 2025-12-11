@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { getLucideIcon } from '@/utils/lucideIcons'
 
-function ServiceCard({ icon, title, description, link, delay = 0 }) {
+function ServiceCard({ icon, title, description, link, delay = 0, variant = 'default' }) {
   // Get icon component from icon name string
   const IconComponent = typeof icon === 'string' ? getLucideIcon(icon) : icon
   const Icon = IconComponent
@@ -15,6 +15,8 @@ function ServiceCard({ icon, title, description, link, delay = 0 }) {
       style={{
         backgroundColor: 'var(--card)',
         animationDelay: `${delay}ms`,
+        border: variant === 'elevated' ? '1px solid var(--border)' : undefined,
+        boxShadow: variant === 'elevated' ? '0 8px 30px rgba(0, 0, 0, 0.08)' : undefined,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -46,6 +48,7 @@ function ServiceCard({ icon, title, description, link, delay = 0 }) {
           className="w-16 h-16 md:w-20 md:h-20 rounded-full mb-6 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 relative"
           style={{
             backgroundColor: 'var(--primary-10)',
+            border: variant === 'elevated' ? '1px solid var(--primary-20)' : undefined,
           }}
         >
           {/* Icon Background on Hover */}

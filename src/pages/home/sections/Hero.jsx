@@ -175,7 +175,7 @@ function Hero() {
             </div>
           )}
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-black text-white mb-6 max-w-5xl leading-tight pointer-events-none">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 max-w-5xl leading-tight pointer-events-none">
             {headline}
           </h1>
 

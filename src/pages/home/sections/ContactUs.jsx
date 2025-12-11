@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/form'
 import { Phone, Mail, Clock, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import axiosInstance from '@/lib/axios'
+import { useServicesRedux } from '@/hooks/useServicesRedux'
 
 // Validation schema
 const contactFormSchema = z.object({
@@ -53,6 +54,7 @@ function ContactUs() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null) // 'success' | 'error' | null
   const [submitMessage, setSubmitMessage] = useState('')
+  const { services: fetchedServices } = useServicesRedux({ featured: false })
 
   const form = useForm({
     resolver: zodResolver(contactFormSchema),
@@ -102,13 +104,19 @@ function ContactUs() {
     }
   }
 
-  const services = [
+  const fallbackServices = [
     'Energy Procurement',
     'Contract Management',
     'Energy Efficiency',
     'Sustainability Consulting',
     'Multi-site Management',
   ]
+  const serviceOptions = (Array.isArray(fetchedServices) && fetchedServices.length > 0)
+    ? [...fetchedServices]
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .map(s => s.name || s.title || s.slug || '')
+        .filter(Boolean)
+    : fallbackServices
 
   const contactInfo = [
     {
@@ -133,6 +141,7 @@ function ContactUs() {
 
   return (
     <section 
+      id="contact"
       className="py-16 md:py-28 px-4 relative overflow-hidden"
       style={{ 
         background: 'linear-gradient(135deg, var(--background) 0%, var(--background) 100%)',
@@ -368,7 +377,7 @@ function ContactUs() {
                               borderColor: 'var(--border)',
                             }}
                           >
-                            {services.map((service) => (
+                            {serviceOptions.map((service) => (
                               <SelectItem
                                 key={service}
                                 value={service}

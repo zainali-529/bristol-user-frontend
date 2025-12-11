@@ -2,12 +2,12 @@ import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { fetchServiceBySlug, selectSelectedService, selectServiceLoading, selectServicesError, clearSelectedService } from '@/store/slices/servicesSlice'
-import TopNav from '../../components/TopNav'
 import { getLucideIcon } from '@/utils/lucideIcons'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { ContactUs } from '../home/sections'
+import { ContactUs, WhyTrustUs, Testimonials, Faqs } from '../home/sections'
+import Footer from '../../components/Footer'
 
 function ServiceDetail() {
   const { slug } = useParams()
@@ -30,7 +30,6 @@ function ServiceDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <TopNav />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-lg" style={{ color: 'var(--text-secondary)' }}>
             Loading service...
@@ -43,7 +42,6 @@ function ServiceDetail() {
   if (error || !service) {
     return (
       <div className="min-h-screen bg-background">
-        <TopNav />
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
           <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
             Service Not Found
@@ -64,7 +62,6 @@ function ServiceDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNav />
 
       {/* Hero Section with Main Image */}
       <section className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden">
@@ -325,6 +322,13 @@ function ServiceDetail() {
 
       {/* Contact Section */}
       <ContactUs />
+
+      {/* Additional Sections */}
+      <WhyTrustUs />
+      <Testimonials />
+      <Faqs />
+
+      <Footer />
     </div>
   )
 }

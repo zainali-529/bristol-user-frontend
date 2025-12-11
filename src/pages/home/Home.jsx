@@ -1,11 +1,9 @@
-import TopNav from '../../components/TopNav'
 import Footer from '../../components/Footer'
-import { HeroSection, WhyTrustUs, About, Services, TrustedPartners, HowWeWork, IndustriesWeServe, AverageSavingsByIndustry, Testimonials, ContactUs, QuoteForm, TeamMembers, EnergyPriceTracker, SavingsStatistics, BillCalculator, Faqs, MouseRevealSection } from './sections'
+import { HeroSection, WhyTrustUs, About, Services, TrustedPartners, HowWeWork, IndustriesWeServe, AverageSavingsByIndustry, Testimonials, ContactUs, QuoteForm, EnergyPriceTracker, SavingsStatistics, BillCalculator, Faqs, MouseRevealSection, News } from './sections'
 
 function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <TopNav />
       <HeroSection />
       <SavingsStatistics />
       <WhyTrustUs />
@@ -17,9 +15,9 @@ function HomePage() {
       <AverageSavingsByIndustry />
       <BillCalculator />
       <EnergyPriceTracker />
+      <News />
       <Testimonials />
       <MouseRevealSection />
-      <TeamMembers />
       <Faqs />
       <ContactUs />
       <QuoteForm />
@@ -29,4 +27,3 @@ function HomePage() {
 }
 
 export default HomePage
-

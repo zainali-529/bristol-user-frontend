@@ -1,149 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, HelpCircle, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-// import apiService from '@/services/api'
-
-// Dummy FAQs data
-const dummyFAQs = [
-  {
-    _id: '1',
-    question: 'How can I switch my energy supplier?',
-    answer: 'Switching your energy supplier is easy! Simply contact us and we\'ll handle the entire process for you. We\'ll compare rates, manage the paperwork, and ensure a smooth transition with no interruption to your service. The switch typically takes 2-3 weeks to complete.',
-    category: 'General',
-    displayOrder: 1,
-    isActive: true,
-  },
-  {
-    _id: '2',
-    question: 'Will I experience any service interruption when switching?',
-    answer: 'No, you won\'t experience any interruption to your energy supply. The switch happens seamlessly in the background, and your energy will continue to flow as normal. Your meter readings and billing will be handled by your new supplier from the switch date.',
-    category: 'General',
-    displayOrder: 2,
-    isActive: true,
-  },
-  {
-    _id: '3',
-    question: 'How much can I save by switching suppliers?',
-    answer: 'Savings vary depending on your current tariff and usage, but our clients typically save between 15-30% on their energy bills. We analyze your current costs and find the most competitive rates available in the market. Contact us for a free, no-obligation quote tailored to your business.',
-    category: 'Pricing',
-    displayOrder: 3,
-    isActive: true,
-  },
-  {
-    _id: '4',
-    question: 'What is the contract length for energy supply?',
-    answer: 'Contract lengths typically range from 1 to 5 years, depending on your preference and the supplier. We can help you find flexible contracts that suit your business needs. Longer contracts often offer better rates, but we also have options for businesses that prefer shorter commitments.',
-    category: 'Contracts',
-    displayOrder: 4,
-    isActive: true,
-  },
-  {
-    _id: '5',
-    question: 'Do you charge any fees for your service?',
-    answer: 'Our service is completely free for businesses. We earn a commission from energy suppliers when you switch, so there are no hidden fees or charges for you. You only pay for your energy usage at the competitive rates we secure for you.',
-    category: 'Pricing',
-    displayOrder: 5,
-    isActive: true,
-  },
-  {
-    _id: '6',
-    question: 'Can I switch if I\'m currently in a contract?',
-    answer: 'If you\'re currently in a fixed-term contract, you may face early termination fees. However, we can review your contract and calculate if switching would still save you money despite these fees. In many cases, the savings outweigh the exit costs. We\'ll provide a clear breakdown before you make any decision.',
-    category: 'Contracts',
-    displayOrder: 6,
-    isActive: true,
-  },
-  {
-    _id: '7',
-    question: 'What information do I need to get a quote?',
-    answer: 'To provide an accurate quote, we need your recent energy bills, business address, and approximate annual usage. If you have your meter numbers (MPAN for electricity and MPRN for gas), that\'s helpful too. Don\'t worry if you don\'t have everything - we can help you gather the necessary information.',
-    category: 'General',
-    displayOrder: 7,
-    isActive: true,
-  },
-  {
-    _id: '8',
-    question: 'How often should I review my energy contract?',
-    answer: 'We recommend reviewing your energy contract at least 3-4 months before it expires. This gives you enough time to compare rates and secure the best deal. Energy prices fluctuate, so regular reviews ensure you\'re always getting competitive rates. We can set up reminders for you.',
-    category: 'Contracts',
-    displayOrder: 8,
-    isActive: true,
-  },
-  {
-    _id: '9',
-    question: 'What types of businesses do you work with?',
-    answer: 'We work with businesses of all sizes across various industries including retail, hospitality, manufacturing, healthcare, education, and more. Whether you\'re a small shop or a large industrial facility, we have the expertise to find the right energy solution for your needs.',
-    category: 'General',
-    displayOrder: 9,
-    isActive: true,
-  },
-  {
-    _id: '10',
-    question: 'How do I read my energy meter?',
-    answer: 'For digital meters, simply note down the numbers displayed (ignore any numbers after a decimal point). For dial meters, read from left to right, writing down the number the pointer has passed. If the pointer is between two numbers, record the lower number. We can provide detailed guidance specific to your meter type.',
-    category: 'Billing',
-    displayOrder: 10,
-    isActive: true,
-  },
-]
-
-const dummyCategories = ['All', 'General', 'Pricing', 'Contracts', 'Billing']
+import { useFaqsRedux } from '@/hooks/useFaqsRedux'
 
 function Faqs() {
-  const [faqs, setFaqs] = useState(dummyFAQs)
-  const [filteredFaqs, setFilteredFaqs] = useState(dummyFAQs)
-  const [categories, setCategories] = useState(dummyCategories)
+  const { faqs: fetchedFaqs, categories: fetchedCategories, loading } = useFaqsRedux()
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const [openIndex, setOpenIndex] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [loadingState, setLoadingState] = useState(false)
 
-  useEffect(() => {
-    // Uncomment these when backend is ready
-    // fetchFAQs()
-    // fetchCategories()
-  }, [])
+  const categories = useMemo(() => (
+    Array.isArray(fetchedCategories) ? fetchedCategories : ['All']
+  ), [fetchedCategories])
 
-  useEffect(() => {
-    filterFAQs()
-  }, [faqs, selectedCategory, searchQuery])
-
-  const fetchFAQs = async () => {
-    try {
-      setLoading(true)
-      const response = await apiService.getFAQs()
-      if (response.data?.success && response.data?.data) {
-        setFaqs(response.data.data)
-      }
-    } catch (error) {
-      console.error('Error fetching FAQs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchCategories = async () => {
-    try {
-      const response = await apiService.getFAQCategories()
-      if (response.data?.success && response.data?.data) {
-        setCategories(['All', ...response.data.data])
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-      setCategories(['All'])
-    }
-  }
-
-  const filterFAQs = () => {
-    let filtered = [...faqs]
-
-    // Filter by category
+  const filteredFaqs = useMemo(() => {
+    let filtered = Array.isArray(fetchedFaqs) ? [...fetchedFaqs] : []
     if (selectedCategory !== 'All') {
       filtered = filtered.filter((faq) => faq.category === selectedCategory)
     }
-
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
@@ -152,15 +28,18 @@ function Faqs() {
           faq.answer.toLowerCase().includes(query)
       )
     }
+    return filtered
+  }, [fetchedFaqs, selectedCategory, searchQuery])
 
-    setFilteredFaqs(filtered)
-  }
+  useEffect(() => {
+    setLoadingState(loading)
+  }, [loading])
 
   const toggleAccordion = (index) => {
     setOpenIndex(openIndex === index ? null : index)
   }
 
-  if (loading) {
+  if (loadingState) {
     return (
       <section
         className="py-16 md:py-24 px-4"
@@ -423,4 +302,3 @@ function Faqs() {
 }
 
 export default Faqs
-

@@ -35,7 +35,9 @@ export const apiService = {
 
   // News/Blog
   getNews: (params) => axiosInstance.get('/news', { params }),
-  getNewsById: (id) => axiosInstance.get(`/news/${id}`),
+  getNewsBySlug: (slug) => axiosInstance.get(`/news/${slug}`),
+  getNewsCategories: () => axiosInstance.get('/news/categories'),
+  getNewsTags: (limit = 20) => axiosInstance.get('/news/tags', { params: { limit } }),
 
   // Auth (if needed)
   login: (credentials) => axiosInstance.post('/auth/login', credentials),
@@ -95,4 +97,3 @@ export const apiService = {
 }
 
 export default apiService
-

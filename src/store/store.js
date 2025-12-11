@@ -7,7 +7,11 @@ import whyTrustUsReducer from './slices/whyTrustUsSlice';
 import servicesReducer from './slices/servicesSlice';
 import suppliersReducer from './slices/suppliersSlice';
 import industriesReducer from './slices/industriesSlice';
+import testimonialsReducer from './slices/testimonialsSlice';
+import teamMembersReducer from './slices/teamMembersSlice';
 import howWeWorkReducer from './slices/howWeWorkSlice';
+import faqsReducer from './slices/faqsSlice';
+import newsReducer from './slices/newsSlice';
 
 // Redux Persist configuration for hero slice
 const heroPersistConfig = {
@@ -65,6 +69,34 @@ const howWeWorkPersistConfig = {
   whitelist: ['steps', 'lastFetched'],
 };
 
+// Redux Persist configuration for testimonials slice
+const testimonialsPersistConfig = {
+  key: 'testimonials',
+  storage,
+  whitelist: ['testimonials', 'lastFetched'],
+};
+
+// Redux Persist configuration for team members slice
+const teamMembersPersistConfig = {
+  key: 'teamMembers',
+  storage,
+  whitelist: ['teamMembers', 'lastFetched'],
+};
+
+// Redux Persist configuration for faqs slice
+const faqsPersistConfig = {
+  key: 'faqs',
+  storage,
+  whitelist: ['faqs', 'categories', 'lastFetched'],
+};
+
+// Redux Persist configuration for news slice
+const newsPersistConfig = {
+  key: 'news',
+  storage,
+  whitelist: ['news', 'lastFetched', 'categories', 'tags'],
+};
+
 // Create persisted reducers
 const persistedHeroReducer = persistReducer(heroPersistConfig, heroReducer);
 const persistedThemeReducer = persistReducer(themePersistConfig, themeReducer);
@@ -73,6 +105,10 @@ const persistedServicesReducer = persistReducer(servicesPersistConfig, servicesR
 const persistedSuppliersReducer = persistReducer(suppliersPersistConfig, suppliersReducer);
 const persistedIndustriesReducer = persistReducer(industriesPersistConfig, industriesReducer);
 const persistedHowWeWorkReducer = persistReducer(howWeWorkPersistConfig, howWeWorkReducer);
+const persistedTestimonialsReducer = persistReducer(testimonialsPersistConfig, testimonialsReducer);
+const persistedTeamMembersReducer = persistReducer(teamMembersPersistConfig, teamMembersReducer);
+const persistedFaqsReducer = persistReducer(faqsPersistConfig, faqsReducer);
+const persistedNewsReducer = persistReducer(newsPersistConfig, newsReducer);
 
 export const store = configureStore({
   reducer: {
@@ -83,6 +119,10 @@ export const store = configureStore({
     suppliers: persistedSuppliersReducer,
     industries: persistedIndustriesReducer,
     howWeWork: persistedHowWeWorkReducer,
+    testimonials: persistedTestimonialsReducer,
+    teamMembers: persistedTeamMembersReducer,
+    faqs: persistedFaqsReducer,
+    news: persistedNewsReducer,
     // Add other reducers here as needed
   },
   middleware: (getDefaultMiddleware) =>
@@ -114,6 +154,26 @@ export const store = configureStore({
           'howWeWork/fetchHowWeWorkSteps/pending',
           'howWeWork/fetchHowWeWorkSteps/fulfilled',
           'howWeWork/fetchHowWeWorkSteps/rejected',
+          'testimonials/fetchTestimonials/pending',
+          'testimonials/fetchTestimonials/fulfilled',
+          'testimonials/fetchTestimonials/rejected',
+          'teamMembers/fetchTeamMembers/pending',
+          'teamMembers/fetchTeamMembers/fulfilled',
+          'teamMembers/fetchTeamMembers/rejected',
+          'faqs/fetchFaqs/pending',
+          'faqs/fetchFaqs/fulfilled',
+          'faqs/fetchFaqs/rejected',
+          'faqs/fetchFaqCategories/pending',
+          'faqs/fetchFaqCategories/fulfilled',
+          'faqs/fetchFaqCategories/rejected',
+          'news/fetchNews/pending',
+          'news/fetchNews/fulfilled',
+          'news/fetchNews/rejected',
+          'news/fetchNewsBySlug/pending',
+          'news/fetchNewsBySlug/fulfilled',
+          'news/fetchNewsBySlug/rejected',
+          'news/fetchNewsCategories/fulfilled',
+          'news/fetchNewsTags/fulfilled',
         ],
       },
     }),

@@ -3,21 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   TrendingUp, 
   TrendingDown, 
-  Download, 
-  Bell,
   Activity,
   Calendar,
   BarChart3,
   Zap,
   Flame
 } from 'lucide-react'
-import TopNav from '@/components/TopNav'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import LivePriceCard from '@/components/widgets/LivePriceCard'
 import PriceLineChart from '@/components/charts/PriceLineChart'
 import PriceComparisonChart from '@/components/charts/PriceComparisonChart'
-import { getEnergyPriceData, getComparisonData, getMarketStats, subscribeToPriceAlerts } from '@/services/energyPriceApi'
+import { getEnergyPriceData, getComparisonData, getMarketStats } from '@/services/energyPriceApi'
+import Faqs from '@/pages/home/sections/Faqs'
+import ContactUs from '@/pages/home/sections/ContactUs'
+import Footer from '@/components/Footer'
 
 function EnergyPriceTracker() {
   const [timeRange, setTimeRange] = useState('30d')
@@ -25,7 +24,6 @@ function EnergyPriceTracker() {
   const [priceData, setPriceData] = useState(null)
   const [comparisonData, setComparisonData] = useState(null)
   const [marketStats, setMarketStats] = useState(null)
-  const [email, setEmail] = useState('')
 
   useEffect(() => {
     // Fetch data when time range changes
@@ -48,23 +46,6 @@ function EnergyPriceTracker() {
     fetchData()
   }, [timeRange])
 
-  const handleSubscribe = async (e) => {
-    e.preventDefault()
-    
-    try {
-      const response = await subscribeToPriceAlerts(email)
-      
-      if (response.success) {
-        alert(response.message || `Price alerts will be sent to: ${email}`)
-        setEmail('')
-      } else {
-        alert(response.message || 'Failed to subscribe. Please try again.')
-      }
-    } catch (error) {
-      console.error('Subscribe error:', error)
-      alert(error.message || 'Failed to subscribe. Please try again.')
-    }
-  }
 
   if (!priceData || !marketStats) {
     return (
@@ -100,7 +81,6 @@ function EnergyPriceTracker() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNav />
 
       {/* Hero Section */}
       <section 
@@ -574,104 +554,11 @@ function EnergyPriceTracker() {
         </div>
       </section>
 
-      {/* Price Alerts Section */}
-      <section 
-        className="py-16 md:py-24 px-4"
-        style={{ backgroundColor: 'var(--primary-5)' }}
-      >
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <div 
-              className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center"
-              style={{ backgroundColor: 'var(--primary)' }}
-            >
-              <Bell size={32} color="white" />
-            </div>
-
-            <h2 
-              className="text-3xl md:text-4xl font-bold mb-4"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Get Price Alerts
-            </h2>
-
-            <p 
-              className="text-lg mb-8"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              Never miss a price drop. Get notified when energy prices reach your target levels.
-            </p>
-
-            <form onSubmit={handleSubscribe} className="max-w-md mx-auto">
-              <div className="flex gap-3">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="flex-1"
-                  style={{
-                    backgroundColor: 'var(--card)',
-                    borderColor: 'var(--primary-20)',
-                  }}
-                />
-                <Button
-                  type="submit"
-                  className="gap-2"
-                  style={{
-                    background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-60))',
-                    color: 'white',
-                  }}
-                >
-                  <Bell size={18} />
-                  Subscribe
-                </Button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Download Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Button
-              className="gap-2"
-              size="lg"
-              style={{
-                background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-60))',
-                color: 'white',
-              }}
-              onClick={() => alert('Download feature coming soon!')}
-            >
-              <Download size={20} />
-              Download Price Report
-            </Button>
-            <p 
-              className="text-sm mt-4"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              Export current price data and trends as PDF
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <Faqs />
+      <ContactUs />
+      <Footer />
     </div>
   )
 }
 
 export default EnergyPriceTracker
-

@@ -1,37 +1,66 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
 import gsap from 'gsap'
+import { useTeamMembersRedux } from '@/hooks/useTeamMembersRedux'
+import { Linkedin, Mail, Globe, Twitter } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 
 function MouseRevealSection() {
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState(null)
   const sectionRef = useRef(null)
   const imageRefs = useRef([])
   const rowRefs = useRef([])
   const mousePos = useRef({ x: 0, y: 0 })
   const imagePos = useRef([])
   const activeImageIndex = useRef(null)
+  const { teamMembers: teamMembersData, loading } = useTeamMembersRedux()
 
-  // Team members data with images
-  const teamMembers = [
-    {
-      name: 'Richard Gaston',
-      role: 'CEO & Founder',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop'
-    },
-    {
-      name: 'KangHee Kim',
-      role: 'Chief Technology Officer',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=600&fit=crop'
-    },
-    {
-      name: 'Inka and Nicolas',
-      role: 'Design Directors',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=600&fit=crop'
-    },
-    {
-      name: 'Arch McLeish',
-      role: 'Lead Developer',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&h=600&fit=crop'
+  const resolveImageUrl = (img) => {
+    if (!img) return '/images/team-1.jpg'
+    if (Array.isArray(img)) img = img[0]
+    if (typeof window !== 'undefined' && typeof File !== 'undefined' && img instanceof File) {
+      return URL.createObjectURL(img)
     }
-  ]
+    if (typeof img === 'object' && img !== null) {
+      const candidate = img.url || img.path || img.src
+      if (typeof candidate === 'string' && candidate.length > 0) {
+        img = candidate
+      } else {
+        return '/images/team-1.jpg'
+      }
+    }
+    if (typeof img !== 'string') return '/images/team-1.jpg'
+    if (/^https?:\/\//i.test(img)) return img
+    if (img.startsWith('/images/') || img.startsWith('/logo/') || img.startsWith('/assets/')) return img
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+    const assetBase = apiBase.replace(/\/api$/, '')
+    return `${assetBase}${img.startsWith('/') ? img : `/${img}`}`
+  }
+
+  const clean = (v) => {
+    if (!v) return ''
+    return String(v).replace(/`/g, '').trim()
+  }
+
+  const teamMembers = useMemo(() => {
+    if (!Array.isArray(teamMembersData)) return []
+    return teamMembersData
+      .filter(m => m.isActive !== false)
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+      .map((m) => ({
+        name: m.name || `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Team Member',
+        role: m.position || m.role || '',
+        image: resolveImageUrl((m.image && m.image.url) || m.imageUrl || m.photo || m.image),
+        imageAlt: clean(m.image?.alt) || m.name || 'Team member',
+        description: clean(m.description) || '',
+        social: {
+          linkedin: clean(m.socialLinks?.linkedin),
+          email: clean(m.socialLinks?.email),
+          twitter: clean(m.socialLinks?.twitter),
+          website: clean(m.socialLinks?.website),
+        }
+      }))
+  }, [teamMembersData])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -182,7 +211,7 @@ function MouseRevealSection() {
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup())
     }
-  }, [])
+  }, [teamMembers])
 
   return (
     <section
@@ -211,11 +240,18 @@ function MouseRevealSection() {
 
         {/* Team Members List */}
         <div className="space-y-0">
-          {teamMembers.map((member, index) => (
-            <div
+          {loading && teamMembers.length === 0 ? (
+            <div className="py-8" style={{ color: 'var(--text-secondary)' }}>Loading team...</div>
+          ) : (
+            teamMembers.map((member, index) => (
+          <div
               key={index}
               ref={(el) => (rowRefs.current[index] = el)}
               className="group relative cursor-pointer"
+              onClick={() => {
+                setSelected(member)
+                setOpen(true)
+              }}
               style={{
                 borderBottom: '1px solid var(--border)',
               }}
@@ -267,7 +303,7 @@ function MouseRevealSection() {
                 >
                   <img
                     src={member.image}
-                    alt={member.name}
+                    alt={member.imageAlt}
                     className="w-full h-full object-cover"
                     loading="lazy"
                     style={{
@@ -285,22 +321,46 @@ function MouseRevealSection() {
                         rgba(0, 0, 0, 0.6) 100%)`,
                     }}
                   />
-                  {/* Name overlay on image */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <p className="text-white text-2xl font-bold mb-1 drop-shadow-lg">
+                  <div className="absolute bottom-0 left-0 right-0 p-6 space-y-2">
+                    <p className="text-white text-2xl font-bold drop-shadow-lg">
                       {member.name}
                     </p>
-                    <p
-                      className="text-base font-medium drop-shadow-md"
-                      style={{ color: 'var(--primary-60)' }}
-                    >
+                    <p className="text-sm font-semibold" style={{ color: 'var(--primary-60)' }}>
                       {member.role}
                     </p>
+                    {member.description && (
+                      <p className="text-sm text-white/90 line-clamp-3">
+                        {member.description}
+                      </p>
+                    )}
+                    <div className="flex gap-3 pt-2">
+                      {member.social?.linkedin && (
+                        <a href={member.social.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ backgroundColor: 'var(--primary-20)' }}>
+                          <Linkedin size={16} style={{ color: 'var(--primary)' }} />
+                        </a>
+                      )}
+                      {member.social?.twitter && (
+                        <a href={member.social.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ backgroundColor: 'var(--primary-20)' }}>
+                          <Twitter size={16} style={{ color: 'var(--primary)' }} />
+                        </a>
+                      )}
+                      {member.social?.website && (
+                        <a href={member.social.website} target="_blank" rel="noopener noreferrer" aria-label="Website" className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ backgroundColor: 'var(--primary-20)' }}>
+                          <Globe size={16} style={{ color: 'var(--primary)' }} />
+                        </a>
+                      )}
+                      {member.social?.email && (
+                        <a href={`mailto:${member.social.email}`} aria-label="Email" className="inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ backgroundColor: 'var(--primary-20)' }}>
+                          <Mail size={16} style={{ color: 'var(--primary)' }} />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Bottom decoration */}
@@ -312,6 +372,63 @@ function MouseRevealSection() {
             Together, we're transforming the energy landscape
           </p>
         </div>
+
+        {/* Detail Dialog */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle style={{ color: 'var(--text-primary)' }}>
+                {selected?.name}
+              </DialogTitle>
+              <DialogDescription>
+                {selected?.role}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+                {selected?.image && (
+                  <img
+                    src={selected.image}
+                    alt={selected?.imageAlt || selected?.name || 'Team member'}
+                    className="w-full h-64 object-cover"
+                    loading="lazy"
+                  />
+                )}
+              </div>
+              <div className="space-y-4">
+                {selected?.description && (
+                  <p style={{ color: 'var(--text-secondary)' }}>{selected.description}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {selected?.social?.linkedin && (
+                    <a href={selected.social.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-md border" style={{ borderColor: 'var(--border)' }}>
+                      <Linkedin size={16} style={{ color: 'var(--primary)' }} />
+                      <span style={{ color: 'var(--text-primary)' }}>LinkedIn</span>
+                    </a>
+                  )}
+                  {selected?.social?.twitter && (
+                    <a href={selected.social.twitter} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-md border" style={{ borderColor: 'var(--border)' }}>
+                      <Twitter size={16} style={{ color: 'var(--primary)' }} />
+                      <span style={{ color: 'var(--text-primary)' }}>Twitter</span>
+                    </a>
+                  )}
+                  {selected?.social?.website && (
+                    <a href={selected.social.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-2 rounded-md border" style={{ borderColor: 'var(--border)' }}>
+                      <Globe size={16} style={{ color: 'var(--primary)' }} />
+                      <span style={{ color: 'var(--text-primary)' }}>Website</span>
+                    </a>
+                  )}
+                  {selected?.social?.email && (
+                    <a href={`mailto:${selected.social.email}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border" style={{ borderColor: 'var(--border)' }}>
+                      <Mail size={16} style={{ color: 'var(--primary)' }} />
+                      <span style={{ color: 'var(--text-primary)' }}>Email</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   )

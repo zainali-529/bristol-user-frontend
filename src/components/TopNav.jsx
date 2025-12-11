@@ -12,8 +12,11 @@ function TopNav() {
     { name: 'Home', path: '/' },
     { name: 'Services', path: '/services' },
     { name: 'About Us', path: '/about' },
+    { name: 'Energy Prices', path: '/energy-price-tracker' },
+    { name: 'Postcode Finder', path: '/postcode-finder' },
     { name: 'Get a Quote', path: '/quote' },
     { name: 'News', path: '/news' },
+    // { name: 'Contact', path: '/#contact' },
   ]
 
   // Check for saved theme preference or default to light mode
@@ -51,14 +54,18 @@ function TopNav() {
           <Logo />
 
           {/* Navigation Links - Desktop */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.path}
-                className="text-base font-medium transition-colors duration-200 relative py-2 hover:opacity-80"
+                className="text-sm font-medium transition-colors duration-200 relative py-2 hover:opacity-80"
                 style={{
-                  color: location.pathname === link.path ? 'var(--primary)' : 'var(--text-primary)',
+                  color: (link.path.includes('#')
+                    ? (location.pathname === '/' && location.hash === link.path.substring(link.path.indexOf('#')))
+                    : location.pathname === link.path)
+                    ? 'var(--primary)'
+                    : 'var(--text-primary)',
                 }}
               >
                 {link.name}
@@ -67,7 +74,7 @@ function TopNav() {
           </div>
 
           {/* Right Side - Dark Mode Toggle & Contact Button */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -95,7 +102,8 @@ function TopNav() {
             </button>
 
             {/* Contact Us Button - Styled like image */}
-            <button
+            <Link
+              to="/contact"
               className="relative overflow-hidden rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center gap-0 pr-2 pl-6 py-2 group"
               style={{
                 background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-60))',
@@ -109,11 +117,11 @@ function TopNav() {
               >
                 <ArrowUpRight size={20} strokeWidth={2.5} />
               </div>
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-3">
+          <div className="lg:hidden flex items-center gap-3">
             {/* Mobile Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -166,7 +174,7 @@ function TopNav() {
 
         {/* Mobile Menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
             mobileMenuOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
           }`}
         >
@@ -178,8 +186,12 @@ function TopNav() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block w-full text-left px-4 py-3 rounded-lg font-medium transition-all duration-200"
                 style={{
-                  backgroundColor: location.pathname === link.path ? 'var(--primary-10)' : 'transparent',
-                  color: location.pathname === link.path ? 'var(--primary)' : 'var(--text-primary)',
+                  backgroundColor: ((link.path.includes('#')
+                    ? (location.pathname === '/' && location.hash === link.path.substring(link.path.indexOf('#')))
+                    : location.pathname === link.path)) ? 'var(--primary-10)' : 'transparent',
+                  color: ((link.path.includes('#')
+                    ? (location.pathname === '/' && location.hash === link.path.substring(link.path.indexOf('#')))
+                    : location.pathname === link.path)) ? 'var(--primary)' : 'var(--text-primary)',
                   transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-20px)',
                   transitionDelay: `${index * 50}ms`,
                 }}
@@ -189,7 +201,8 @@ function TopNav() {
             ))}
             
             {/* Mobile Contact Button */}
-            <button
+            <Link
+              to="/contact"
               className="w-full mt-4 rounded-full font-semibold transition-all duration-300 flex items-center justify-center gap-2 py-3"
               style={{
                 background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-80))',
@@ -203,7 +216,7 @@ function TopNav() {
               >
                 <ArrowUpRight size={18} strokeWidth={2.5} />
               </div>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

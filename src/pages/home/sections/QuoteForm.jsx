@@ -36,6 +36,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import apiService from '@/services/api'
+import { useSuppliersRedux } from '@/hooks/useSuppliersRedux'
 
 // Form validation schema
 const quoteSchema = z.object({
@@ -101,7 +102,6 @@ function QuoteForm() {
 
   const totalSteps = 4
 
-  // Business types
   const businessTypes = [
     'Small Business (1-10 employees)',
     'Medium Business (11-50 employees)',
@@ -115,21 +115,14 @@ function QuoteForm() {
     'Other',
   ]
 
-  // UK Energy Suppliers
-  const energySuppliers = [
-    'British Gas',
-    'EDF Energy',
-    'E.ON',
-    'Scottish Power',
-    'SSE',
-    'Octopus Energy',
-    'Bulb',
-    'OVO Energy',
-    'Shell Energy',
-    'Utility Warehouse',
-    'Other',
-    'Not Sure',
-  ]
+  const { suppliers } = useSuppliersRedux()
+  const supplierOptions = ((Array.isArray(suppliers) ? suppliers : [])
+    .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+    .map(s => s.name || s.title || s.slug || '')
+    .filter(Boolean))
+  const energySuppliers = supplierOptions.length > 0
+    ? [...supplierOptions, 'Other', 'Not Sure']
+    : ['Other', 'Not Sure']
 
   const nextStep = async () => {
     const fields = getFieldsForStep(currentStep)

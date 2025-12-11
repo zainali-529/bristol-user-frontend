@@ -1,17 +1,33 @@
 import { Link } from 'react-router-dom'
-import TopNav from '../../components/TopNav'
 import ServiceCard from '../home/sections/ServiceCard'
+import { Testimonials, Faqs } from '../home/sections'
 import { useServicesRedux } from '@/hooks/useServicesRedux'
 import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import Footer from '../../components/Footer'
 
 function ServicesPage() {
   const { services, loading } = useServicesRedux({ featured: false })
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNav />
       
-      <main className="max-w-7xl mx-auto px-4 py-12 md:py-20">
+      
+      <main className="max-w-7xl mx-auto px-4 py-12 md:py-20 relative overflow-hidden">
+        <div 
+          className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-5 blur-3xl"
+          style={{ 
+            backgroundColor: 'var(--primary)',
+            transform: 'translate(30%, -30%)',
+          }}
+        />
+        <div 
+          className="absolute bottom-0 left-0 w-96 h-96 rounded-full opacity-5 blur-3xl"
+          style={{ 
+            backgroundColor: 'var(--primary)',
+            transform: 'translate(-30%, 30%)',
+          }}
+        />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -62,6 +78,7 @@ function ServicesPage() {
                   description={service.cardDescription}
                   link={`/services/${service.slug}`}
                   delay={index * 100}
+                  variant="elevated"
                 />
               </motion.div>
             ))}
@@ -73,7 +90,66 @@ function ServicesPage() {
             </div>
           </div>
         )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-16 md:mt-24"
+        >
+          <div 
+            className="rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6"
+            style={{ 
+              background: 'linear-gradient(135deg, var(--primary-10) 0%, var(--primary-5) 100%)',
+              border: '1px solid var(--primary-20)',
+            }}
+          >
+            <div className="flex-1">
+              <h2 
+                className="text-2xl md:text-3xl font-bold mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Not sure which service fits?
+              </h2>
+              <p 
+                className="text-base md:text-lg"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Talk to our team and get a tailored recommendation for your business.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                asChild
+                className="rounded-xl font-semibold px-6 py-6 border-0"
+                style={{
+                  background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-60))',
+                  color: 'white',
+                }}
+              >
+                <Link to="/quote">Get a Quote</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="rounded-xl font-semibold px-6 py-6"
+                style={{
+                  borderColor: 'var(--primary-20)',
+                  color: 'var(--primary)',
+                }}
+              >
+                <Link to="/contact">Contact Us</Link>
+              </Button>
+            </div>
+          </div>
+        </motion.div>
       </main>
+
+      <Testimonials />
+      <Faqs />
+
+      <Footer />
     </div>
   )
 }

@@ -1,4 +1,28 @@
 function IndustryCard({ image, title, description, savings }) {
+  const resolveImageUrl = (img) => {
+    if (!img) return '/images/about-1.jpg'
+    if (Array.isArray(img)) img = img[0]
+    if (typeof window !== 'undefined' && typeof File !== 'undefined' && img instanceof File) {
+      return URL.createObjectURL(img)
+    }
+    if (typeof img === 'object' && img !== null) {
+      const candidate = img.url || img.path || img.src
+      if (typeof candidate === 'string' && candidate.length > 0) {
+        img = candidate
+      } else {
+        return '/images/about-1.jpg'
+      }
+    }
+    if (typeof img !== 'string') return '/images/about-1.jpg'
+    if (/^https?:\/\//i.test(img)) return img
+    if (img.startsWith('/images/') || img.startsWith('/logo/') || img.startsWith('/assets/')) return img
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+    const assetBase = apiBase.replace(/\/api$/, '')
+    return `${assetBase}${img.startsWith('/') ? img : `/${img}`}`
+  }
+
+  const finalSrc = resolveImageUrl(image)
+
   return (
     <div 
       className="rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
@@ -7,16 +31,15 @@ function IndustryCard({ image, title, description, savings }) {
       {/* Image with rounded top corners */}
       <div className="relative w-full overflow-hidden rounded-t-2xl">
         <img
-          src={image}
+          src={finalSrc}
           alt={title}
+          loading="lazy"
           className="w-full h-48 md:h-56 object-cover"
           onError={(e) => {
-            e.target.style.display = 'none'
-            e.target.parentElement.innerHTML = `
-              <div class="w-full h-48 md:h-56 flex items-center justify-center rounded-t-2xl" style="background: var(--primary-5);">
-                <p style="color: var(--text-secondary); font-size: 0.875rem;">Add ${title} image</p>
-              </div>
-            `
+            // Fallback to a local placeholder image
+            const fallback = '/images/about-1.jpg'
+            if (e.target.src.endsWith(fallback)) return
+            e.target.src = fallback
           }}
         />
       </div>
