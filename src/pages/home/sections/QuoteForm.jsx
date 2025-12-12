@@ -116,7 +116,7 @@ function QuoteForm() {
   ]
 
   const { suppliers } = useSuppliersRedux()
-  const supplierOptions = ((Array.isArray(suppliers) ? suppliers : [])
+  const supplierOptions = ((Array.isArray(suppliers) ? [...suppliers] : [])
     .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
     .map(s => s.name || s.title || s.slug || '')
     .filter(Boolean))
