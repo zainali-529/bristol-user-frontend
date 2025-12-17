@@ -39,6 +39,9 @@ export const apiService = {
   getNewsCategories: () => axiosInstance.get('/news/categories'),
   getNewsTags: (limit = 20) => axiosInstance.get('/news/tags', { params: { limit } }),
 
+  // Newsletter
+  subscribeNewsletter: (data) => axiosInstance.post('/newsletter/subscribe', data),
+
   // Auth (if needed)
   login: (credentials) => axiosInstance.post('/auth/login', credentials),
   register: (data) => axiosInstance.post('/auth/register', data),

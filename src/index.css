@@ -22,7 +22,7 @@
   /* ===== Light Mode Colors ===== */
   --background: #ffffff;
   --foreground: #333333;
-  
+
   /* Primary Color with Opacity Variants */
   --primary: #AE613A;
   --primary-foreground: #ffffff;
@@ -34,15 +34,15 @@
   --primary-20: rgba(174, 97, 58, 0.2);
   --primary-10: rgba(174, 97, 58, 0.1);
   --primary-5: rgba(174, 97, 58, 0.05);
-  
+
   /* Text Colors */
   --text-primary: #333333;
   --text-secondary: #7C7C7C;
-  
+
   /* Card Colors */
   --card: #ffffff;
   --card-foreground: #333333;
-  
+
   /* Secondary, Muted, Accent */
   --secondary: rgba(174, 97, 58, 0.1);
   --secondary-foreground: #333333;
@@ -50,16 +50,16 @@
   --muted-foreground: #7C7C7C;
   --accent: rgba(174, 97, 58, 0.1);
   --accent-foreground: #333333;
-  
+
   /* Destructive */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   /* Border, Input, Ring */
   --border: rgba(174, 97, 58, 0.2);
   --input: rgba(174, 97, 58, 0.2);
   --ring: #AE613A;
-  
+
   /* Popover */
   --popover: #ffffff;
   --popover-foreground: #333333;
@@ -123,7 +123,7 @@ a {
   /* ===== Dark Mode Colors ===== */
   --background: #121212;
   --foreground: #F5EDEB;
-  
+
   /* Primary Color with Opacity Variants (same as light mode) */
   --primary: #AE613A;
   --primary-foreground: #ffffff;
@@ -135,15 +135,15 @@ a {
   --primary-20: rgba(174, 97, 58, 0.2);
   --primary-10: rgba(174, 97, 58, 0.1);
   --primary-5: rgba(174, 97, 58, 0.05);
-  
+
   /* Text Colors */
   --text-primary: #F5EDEB;
   --text-secondary: #BBAAA4;
-  
+
   /* Card Colors */
   --card: #1E1B1A;
   --card-foreground: #F5EDEB;
-  
+
   /* Secondary, Muted, Accent */
   --secondary: rgba(174, 97, 58, 0.2);
   --secondary-foreground: #F5EDEB;
@@ -151,27 +151,27 @@ a {
   --muted-foreground: #BBAAA4;
   --accent: rgba(174, 97, 58, 0.2);
   --accent-foreground: #F5EDEB;
-  
+
   /* Destructive */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   /* Border, Input, Ring */
   --border: rgba(174, 97, 58, 0.3);
   --input: rgba(174, 97, 58, 0.2);
   --ring: #AE613A;
-  
+
   /* Popover */
   --popover: #1E1B1A;
   --popover-foreground: #F5EDEB;
-  
+
   /* Chart Colors */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  
+
   /* Sidebar */
   --sidebar: #1E1B1A;
   --sidebar-foreground: #F5EDEB;
@@ -192,7 +192,7 @@ a {
     font-family: 'Poppins', system-ui, sans-serif;
     overflow-x: hidden;
   }
-  
+
   /* Global cursor pointer for interactive elements */
   button,
   a,
@@ -205,7 +205,7 @@ a {
   summary {
     cursor: pointer;
   }
-  
+
   /* Disabled elements should not have pointer cursor */
   button:disabled,
   a:disabled,
@@ -224,11 +224,11 @@ a {
   .bg-primary-20 { background-color: var(--primary-20); }
   .bg-primary-10 { background-color: var(--primary-10); }
   .bg-primary-5 { background-color: var(--primary-5); }
-  
+
   /* Text Color Utilities */
   .text-primary { color: var(--text-primary); }
   .text-secondary { color: var(--text-secondary); }
-  
+
   /* Border Color Utilities */
   .border-primary-100 { border-color: var(--primary-100); }
   .border-primary-80 { border-color: var(--primary-80); }
@@ -238,20 +238,20 @@ a {
   .border-primary-20 { border-color: var(--primary-20); }
   .border-primary-10 { border-color: var(--primary-10); }
   .border-primary-5 { border-color: var(--primary-5); }
-  
+
   /* Gradient Utilities */
   .gradient-top-bottom {
     background: linear-gradient(to bottom, var(--primary-100), var(--primary-20));
   }
-  
+
   .gradient-left-right {
     background: linear-gradient(to right, var(--primary-100), var(--primary-20));
   }
-  
+
   .gradient-contact-btn {
     background: linear-gradient(to bottom, var(--primary-100), var(--primary-80));
   }
-  
+
   /* Shimmer Animation for Service Cards */
   @keyframes shimmer {
     0% {
@@ -261,7 +261,7 @@ a {
       transform: translateX(200%) translateY(0);
     }
   }
-  
+
   /* Fade In Animation for Service Cards */
   @keyframes fadeInUp {
     from {
@@ -273,12 +273,12 @@ a {
       transform: translateY(0);
     }
   }
-  
+
   .service-card-animate {
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0;
   }
-  
+
   /* Custom Range Slider Styling */
   input[type="range"] {
     -webkit-appearance: none;
@@ -286,7 +286,7 @@ a {
     background: transparent;
     cursor: pointer;
   }
-  
+
   /* Webkit (Chrome, Safari, Edge) */
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -299,16 +299,16 @@ a {
     box-shadow: 0 2px 8px rgba(174, 97, 58, 0.4);
     transition: all 0.2s ease;
   }
-  
+
   input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
     box-shadow: 0 4px 12px rgba(174, 97, 58, 0.6);
   }
-  
+
   input[type="range"]::-webkit-slider-thumb:active {
     transform: scale(1.1);
   }
-  
+
   /* Firefox */
   input[type="range"]::-moz-range-thumb {
     width: 24px;
@@ -320,16 +320,16 @@ a {
     box-shadow: 0 2px 8px rgba(174, 97, 58, 0.4);
     transition: all 0.2s ease;
   }
-  
+
   input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.2);
     box-shadow: 0 4px 12px rgba(174, 97, 58, 0.6);
   }
-  
+
   input[type="range"]::-moz-range-thumb:active {
     transform: scale(1.1);
   }
-  
+
   /* Perspective utility for 3D effects */
   .perspective-1000 {
     perspective: 1000px;

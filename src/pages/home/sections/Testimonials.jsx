@@ -1,18 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel'
-import TestimonialCard from './TestimonialCard'
+import { useMemo } from 'react'
+import { TestimonialsColumn } from '@/components/ui/testimonial-columns'
 import { useTestimonialsRedux } from '@/hooks/useTestimonialsRedux'
 
 function Testimonials() {
-  const [api, setApi] = useState(null)
-  const [current, setCurrent] = useState(0)
-  const [count, setCount] = useState(0)
   const { testimonials: testimonialsData, loading } = useTestimonialsRedux()
 
   const testimonials = useMemo(() => {
@@ -21,46 +11,20 @@ function Testimonials() {
       .filter(t => t.isActive !== false)
       .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
       .map((t) => ({
-        id: t._id || t.id,
+        text: t.testimonial || t.quote || '',
+        image: t.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name || 'User')}&background=random`,
         name: t.name || 'Client',
-        position: t.position || t.title || '',
-        company: t.company || '',
-        testimonial: t.testimonial || t.quote || '',
-        rating: typeof t.rating === 'number' ? t.rating : 5,
+        role: t.position ? `${t.position}${t.company ? ` at ${t.company}` : ''}` : t.company || '',
       }))
   }, [testimonialsData])
 
-  useEffect(() => {
-    if (!api) {
-      return
-    }
+  const firstColumn = testimonials.filter((_, i) => i % 3 === 0)
+  const secondColumn = testimonials.filter((_, i) => i % 3 === 1)
+  const thirdColumn = testimonials.filter((_, i) => i % 3 === 2)
 
-    setCount(api.scrollSnapList().length)
-    setCurrent(api.selectedScrollSnap() + 1)
-
-    api.on('select', () => {
-      setCurrent(api.selectedScrollSnap() + 1)
-    })
-
-    return () => {
-      api.off('select')
-    }
-  }, [api])
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (!api) return
-
-    const interval = setInterval(() => {
-      if (api.canScrollNext()) {
-        api.scrollNext()
-      } else {
-        api.scrollTo(0) // Reset to first slide
-      }
-    }, 5000) // Change slide every 5 seconds
-
-    return () => clearInterval(interval)
-  }, [api])
+  if (loading && testimonials.length === 0) {
+    return null // or a loading skeleton
+  }
 
   return (
     <section 
@@ -79,7 +43,7 @@ function Testimonials() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
+        <div className="text-center mb-12">
           <span 
             className="text-sm md:text-base font-medium mb-2 block"
             style={{ color: 'var(--primary)' }}
@@ -100,70 +64,19 @@ function Testimonials() {
           </p>
         </div>
 
-        {/* Carousel */}
-        <div className="relative">
-          <Carousel
-            setApi={setApi}
-            opts={{
-              align: 'start',
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {testimonials.map((testimonial) => (
-                <CarouselItem
-                  key={testimonial.id}
-                  className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3"
-                >
-                  <TestimonialCard
-                    name={testimonial.name}
-                    position={testimonial.position}
-                    company={testimonial.company}
-                    testimonial={testimonial.testimonial}
-                    rating={testimonial.rating}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-
-            {/* Navigation Arrows */}
-            <CarouselPrevious 
-              className="left-0 md:-left-12"
-              style={{
-                backgroundColor: 'var(--card)',
-                borderColor: 'var(--primary-20)',
-                color: 'var(--primary)',
-              }}
-            />
-            <CarouselNext 
-              className="right-0 md:-right-12"
-              style={{
-                backgroundColor: 'var(--card)',
-                borderColor: 'var(--primary-20)',
-                color: 'var(--primary)',
-              }}
-            />
-          </Carousel>
-
-          {/* Slide Indicators */}
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: count }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => api?.scrollTo(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index + 1 === current ? 'w-8' : ''
-                }`}
-                style={{
-                  backgroundColor: index + 1 === current 
-                    ? 'var(--primary)' 
-                    : 'var(--primary-20)',
-                }}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+        {/* Marquee Columns */}
+        <div className="mt-10 flex max-h-[740px] justify-center gap-6 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)]">
+          <TestimonialsColumn duration={16} testimonials={firstColumn} />
+          <TestimonialsColumn
+            className="hidden md:block"
+            duration={20}
+            testimonials={secondColumn}
+          />
+          <TestimonialsColumn
+            className="hidden lg:block"
+            duration={18}
+            testimonials={thirdColumn}
+          />
         </div>
       </div>
     </section>

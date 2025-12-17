@@ -18,5 +18,8 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {}
+  "registries": {
+    "@efferd": "https://efferd.com/r/{name}.json",
+    "@fancy": "https://fancycomponents.dev/r/{name}.json"
+  }
 }

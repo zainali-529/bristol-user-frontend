@@ -1,4 +1,7 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { apiService } from '@/services/api'
 import { 
   Mail, 
   Phone, 
@@ -9,7 +12,8 @@ import {
   Instagram,
   Zap,
   ArrowRight,
-  Heart
+  Heart,
+  Loader2
 } from 'lucide-react'
 import Logo from './Logo'
 import { Button } from './ui/button'
@@ -17,6 +21,35 @@ import { Input } from './ui/input'
 
 function Footer() {
   const currentYear = new Date().getFullYear()
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault()
+    if (!email) {
+      toast.error('Please enter your email address')
+      return
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await apiService.subscribeNewsletter({ email })
+      toast.success('Successfully subscribed to our newsletter!')
+      setEmail('')
+    } catch (error) {
+      console.error('Newsletter subscription error:', error)
+      toast.error(error.response?.data?.message || 'Failed to subscribe. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const quickLinks = [
     { name: 'About Us', href: '#about' },
@@ -235,10 +268,13 @@ function Footer() {
             </p>
             
             {/* Newsletter Form */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 mb-6">
               <Input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 className="flex-1 h-12 rounded-xl"
                 style={{
                   backgroundColor: 'var(--background)',
@@ -247,15 +283,17 @@ function Footer() {
                 }}
               />
               <Button
+                type="submit"
+                disabled={loading}
                 className="h-12 px-6 rounded-xl font-semibold whitespace-nowrap"
                 style={{
                   backgroundColor: 'var(--primary)',
                   color: 'white',
                 }}
               >
-                Subscribe
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Subscribe'}
               </Button>
-            </div>
+            </form>
 
             {/* Trust Badges */}
             <div 
