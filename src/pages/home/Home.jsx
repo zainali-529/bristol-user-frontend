@@ -12,7 +12,7 @@ function HomePage() {
       <TrustedPartners />
       <HowWeWork />
       <IndustriesWeServe />
-      <AverageSavingsByIndustry />
+      {/* <AverageSavingsByIndustry /> */}
       <BillCalculator />
       <EnergyPriceTracker />
       <News />

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import axios from "axios"
 import { Search, MapPin, Loader2, Check, Building2, X, Map, Globe, Sparkles } from "lucide-react"
@@ -329,7 +328,7 @@ function PostcodeFinder() {
                       Suggestions
                     </span>
                   </div>
-                  <ScrollArea className="max-h-64">
+                  <div className="max-h-64 overflow-y-auto">
                     {loadingSuggest ? (
                       <div className="p-4 space-y-3">
                         {[1, 2, 3].map((i) => (
@@ -345,7 +344,7 @@ function PostcodeFinder() {
                     ) : (
                       <div className="p-3 grid gap-2">{suggestions.map(renderSuggestion)}</div>
                     )}
-                  </ScrollArea>
+                  </div>
                 </div>
               )}
 

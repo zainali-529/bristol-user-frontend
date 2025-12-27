@@ -29,7 +29,7 @@ function NewsPage() {
   const [selectedCategory, setSelectedCategory] = useState('')
 
   useEffect(() => {
-    dispatch(fetchNews({ page: 1, perPage: 12 }))
+    dispatch(fetchNews({ page: 1, perPage: 12, isActive: true, status: 'published' }))
     dispatch(fetchNewsCategories())
     dispatch(fetchNewsTags())
   }, [])
@@ -37,7 +37,7 @@ function NewsPage() {
   const onSelectCategory = (cat) => {
     const next = selectedCategory === cat ? '' : cat
     setSelectedCategory(next)
-    dispatch(fetchNews({ page: 1, perPage: 12, category: next || undefined }))
+    dispatch(fetchNews({ page: 1, perPage: 12, category: next || undefined, isActive: true, status: 'published' }))
   }
 
   return (

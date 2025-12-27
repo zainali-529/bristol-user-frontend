@@ -1,5 +1,5 @@
 import Footer from '../../components/Footer'
-import { WhyTrustUs, Testimonials, Faqs } from '../home/sections'
+import { WhyTrustUs, Testimonials, Faqs, MouseRevealSection } from '../home/sections'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
@@ -161,7 +161,7 @@ function AboutPage() {
         </div>
       </section>
 
-      <section className="py-12 px-4">
+      {/* <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center gap-8 flex-wrap">
             {accreditations.map((src, i) => (
@@ -169,9 +169,10 @@ function AboutPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
+      <MouseRevealSection />
 
-      <section className="py-16 md:py-24 px-4">
+      {/* <section className="py-16 md:py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Case Studies</h2>
@@ -193,7 +194,7 @@ function AboutPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="py-16 md:py-24 px-4" style={{ backgroundColor: 'var(--primary-5)' }}>
         <div className="max-w-7xl mx-auto">

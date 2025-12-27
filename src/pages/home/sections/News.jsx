@@ -4,7 +4,8 @@ import { useNewsRedux } from '@/hooks/useNewsRedux'
 import { Link } from 'react-router-dom'
 
 function NewsSection() {
-  const { news, loading } = useNewsRedux({ featured: true, limit: 3 })
+  // Fetch latest published news (removed featured=true to show all latest news)
+  const { news, loading } = useNewsRedux({ limit: 3, isActive: true, status: 'published' })
 
   return (
     <section className="relative py-16 md:py-24">

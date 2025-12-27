@@ -331,7 +331,13 @@ a {
   }
 
   /* Perspective utility for 3D effects */
-  .perspective-1000 {
-    perspective: 1000px;
+.perspective-1000 {
+  perspective: 1000px;
+}
+}
+
+@media (max-width: 1400px) {
+  html {
+    zoom: 0.9;
   }
 }

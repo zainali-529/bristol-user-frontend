@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowUpRight, Menu, X, Moon, Sun } from 'lucide-react'
+import { ArrowUpRight, Menu, Moon, Sun } from 'lucide-react'
 import Logo from './Logo'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from './ui/sheet'
 
 function TopNav() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const location = useLocation()
 
@@ -42,10 +50,6 @@ function TopNav() {
     }
   }
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen)
-  }
- 
   return (
     <nav className="w-full bg-background sticky top-0 z-50 backdrop-blur-sm bg-opacity-95" style={{ borderColor: 'var(--border)' }}>
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -148,75 +152,56 @@ function TopNav() {
               </div>
             </button>
 
-            <button
-              onClick={toggleMobileMenu}
-              className="p-2 rounded-md transition-colors duration-200"
-              style={{ color: 'var(--text-primary)' }}
-              aria-label="Toggle menu"
-            >
-              <div className="relative w-6 h-6">
-                <Menu
-                  className={`absolute inset-0 transition-all duration-300 ${
-                    mobileMenuOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'
-                  }`}
-                  size={24}
-                />
-                <X
-                  className={`absolute inset-0 transition-all duration-300 ${
-                    mobileMenuOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
-                  }`}
-                  size={24}
-                />
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
-            mobileMenuOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="py-4 space-y-3">
-            {navLinks.map((link, index) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-left px-4 py-3 rounded-lg font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: ((link.path.includes('#')
-                    ? (location.pathname === '/' && location.hash === link.path.substring(link.path.indexOf('#')))
-                    : location.pathname === link.path)) ? 'var(--primary-10)' : 'transparent',
-                  color: ((link.path.includes('#')
-                    ? (location.pathname === '/' && location.hash === link.path.substring(link.path.indexOf('#')))
-                    : location.pathname === link.path)) ? 'var(--primary)' : 'var(--text-primary)',
-                  transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-20px)',
-                  transitionDelay: `${index * 50}ms`,
-                }}
-              >
-                {link.name}
-              </Link>
-            ))}
-            
-            {/* Mobile Contact Button */}
-            <Link
-              to="/contact"
-              className="w-full mt-4 rounded-full font-semibold transition-all duration-300 flex items-center justify-center gap-2 py-3"
-              style={{
-                background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-80))',
-                color: 'white',
-              }}
-            >
-              <span>Contact Us</span>
-              <div
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center"
-                style={{ color: 'var(--primary)' }}
-              >
-                <ArrowUpRight size={18} strokeWidth={2.5} />
-              </div>
-            </Link>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <button
+                  className="p-2 rounded-md transition-colors duration-200"
+                  style={{ color: 'var(--text-primary)' }}
+                  aria-label="Toggle menu"
+                >
+                  <Menu size={24} />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-background">
+                <SheetHeader>
+                  <SheetTitle className="text-left">
+                    <Logo />
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">Mobile Navigation</SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8 px-4">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      to={link.path}
+                      onClick={() => setIsOpen(false)}
+                      className="text-lg font-medium transition-colors hover:text-primary block py-2"
+                      style={{
+                        color: (link.path.includes('#')
+                          ? (location.pathname === '/' && location.hash === link.path.substring(link.path.indexOf('#')))
+                          : location.pathname === link.path)
+                          ? 'var(--primary)'
+                          : 'var(--text-primary)',
+                      }}
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                  <Link
+                    to="/contact"
+                    onClick={() => setIsOpen(false)}
+                    className="mt-4 relative overflow-hidden rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 px-6 py-3 group"
+                    style={{
+                      background: 'linear-gradient(to bottom, var(--primary-100), var(--primary-60))',
+                      color: 'white',
+                    }}
+                  >
+                    <span>Contact Us</span>
+                    <ArrowUpRight size={20} strokeWidth={2.5} />
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
